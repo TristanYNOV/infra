@@ -1,43 +1,26 @@
-# 40 - Observability roadmap (plan)
+# 40 - Observability roadmap
 
-> Périmètre: planification uniquement (pas d’implémentation dans cette étape).
+> Cette page décrit le plan. Aucune implémentation n’est faite dans cette étape.
 
-## Objectif
-Introduire une observabilité progressive, utile d’abord au debug local puis à l’analyse cross-service.
+## Niveau 1 (Monitoring de base)
+Objectif : savoir rapidement si la plateforme est saine.
 
-## Niveau 1 - Metrics (stabilité opérationnelle)
-### Cible
-Mesurer l’état de la plateforme et les erreurs principales.
+Prévoir :
+- health checks homogènes par service,
+- métriques HTTP essentielles (volumétrie, erreurs, latence),
+- tableau de bord de disponibilité,
+- alertes simples sur erreurs/indisponibilités.
 
-### Ce qu’on veut suivre
-- disponibilité des services (`up`),
-- volume de requêtes par route,
-- taux d’erreurs HTTP (4xx/5xx),
-- latence p50/p95/p99 par endpoint critique.
+## Niveau 2 (Traçage distribué)
+Objectif : suivre une requête de bout en bout.
 
-### Préparation attendue
-- endpoints health standardisés,
-- conventions de nommage de routes (voir ci-dessous),
-- logs d’accès Traefik activés (déjà prévu).
+Prévoir :
+- propagation `request-id` / `trace-id` entre services,
+- corrélation logs + traces,
+- visualisation des appels inter-services,
+- analyse des points de latence et erreurs.
 
-## Niveau 2 - Traces distribuées (diagnostic inter-services)
-### Cible
-Corréler une requête client à son parcours front -> gateway -> backend.
-
-### Conventions de base
-- Propager un `trace-id`/`request-id` de bout en bout.
-- Logger cet identifiant dans chaque service.
-- Conserver un nom de route stable (ex: `auth.login`, `auth.refresh`, `video.jobs.list`).
-
-### Bénéfice
-Identifier rapidement où se situe la latence ou l’échec (gateway vs service aval).
-
-## Règles de nommage recommandées
-- Routes HTTP: préfixe métier court + action (`auth.login`).
-- Métriques: snake_case + unité explicite (`http_request_duration_ms`).
-- Labels: limiter la cardinalité (pas d’IDs utilisateurs en labels).
-
-## Prochaine étape (quand validée)
-1. Documenter le stack tooling retenu.
-2. Ajouter les configs Compose correspondantes.
-3. Ajouter un guide de lecture des dashboards/traces.
+## Préparation dès maintenant
+- Stabiliser les routes (`/api/<service>`).
+- Standardiser endpoint health.
+- Conserver des logs exploitables et horodatés.

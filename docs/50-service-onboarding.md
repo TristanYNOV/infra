@@ -1,35 +1,32 @@
-# 50 - Service onboarding checklist
+# 50 - Service onboarding
 
-Checklist à suivre pour intégrer un nouveau microservice dans `infra`.
+Checklist d’ajout d’un nouveau service dans `infra`.
 
-## 1) Identité du service
-- [ ] Nom de service Docker clair (`<name>-service`).
-- [ ] Repo propriétaire identifié.
-- [ ] Owner technique nommé.
+## 1) Contrat API
+- [ ] Définir le basepath : `/api/<service>`.
+- [ ] Lister endpoints clés et statut auth (public/protégé).
 
-## 2) Contrat réseau
-- [ ] Port interne documenté (`<SERVICE>_INTERNAL_PORT`).
-- [ ] Endpoint health disponible (ex: `/health`).
-- [ ] Pas de publication hôte en mode core.
+## 2) Contrat runtime
+- [ ] Déclarer `SERVICE_IMAGE` dans `.env.example`.
+- [ ] Déclarer `SERVICE_INTERNAL_PORT` dans `.env.example`.
+- [ ] Vérifier le port interne réel du conteneur.
 
 ## 3) Routage Traefik
-- [ ] Basepath définie: `/api/<service>`.
-- [ ] Router Traefik ajouté avec règle `PathPrefix(`/api/<service>`)`.
-- [ ] Middleware `StripPrefix` configuré.
-- [ ] Priorité définie pour éviter conflit avec router front.
-- [ ] Service Traefik pointe vers le bon port interne.
+- [ ] Ajouter labels router `PathPrefix(`/api/<service>`)`.
+- [ ] Ajouter middleware `StripPrefix`.
+- [ ] Ajouter `loadbalancer.server.port` sur le port interne.
+- [ ] Vérifier les priorités de route si conflit possible.
 
-## 4) Variables d’environnement
-- [ ] Image/tag ajoutés à `.env.example`.
-- [ ] Ports placeholders ajoutés si nécessaire.
-- [ ] Documentation mise à jour (`docs/30-local-dev.md` + README).
+## 4) Health & logs
+- [ ] Exposer un endpoint `/health` (ou équivalent documenté).
+- [ ] Vérifier les logs lisibles en stdout/stderr.
+- [ ] Ajouter une vérification dans `make health` si pertinent.
 
-## 5) Sécurité & auth (préparation)
-- [ ] Classifier les endpoints publics vs protégés.
-- [ ] Préparer la compatibilité future avec validation JWT au gateway.
-- [ ] Vérifier l’absence d’exposition directe non souhaitée.
+## 5) Sécurité
+- [ ] Aucun `ports:` publié en mode core.
+- [ ] Si debug direct nécessaire, le faire dans un override dédié localhost.
+- [ ] Éviter secrets hardcodés; passer par variables d’environnement.
 
-## 6) Tests d’intégration minimale
-- [ ] Test via Traefik (`/api/<service>/...`) en curl/Postman.
-- [ ] Vérification `make health`.
-- [ ] Logs Traefik et service inspectés sans erreur bloquante.
+## 6) Validation
+- [ ] Test via Traefik (`curl http://localhost/api/<service>/...`).
+- [ ] Mise à jour documentation (`README` + docs concernées).

@@ -1,26 +1,37 @@
 COMPOSE=docker compose
-CORE_FILES=-f docker-compose.yml
-DIRECT_FILES=-f docker-compose.yml -f docker-compose.direct.yml
+CORE=-f docker-compose.yml
+DIRECT=-f docker-compose.yml -f docker-compose.direct.yml
+WATCHTOWER=--profile watchtower
 
-.PHONY: up down logs ps health up-direct
+.PHONY: up up-watchtower up-direct down logs logs-watchtower ps pull restart health
 
 up:
-	$(COMPOSE) $(CORE_FILES) up -d
+	$(COMPOSE) $(CORE) up -d
 
-down:
-	$(COMPOSE) $(DIRECT_FILES) down --remove-orphans
+up-watchtower:
+	$(COMPOSE) $(CORE) $(WATCHTOWER) up -d
 
 up-direct:
-	$(COMPOSE) $(DIRECT_FILES) up -d
+	$(COMPOSE) $(DIRECT) up -d
+
+down:
+	$(COMPOSE) $(DIRECT) down --remove-orphans
 
 logs:
-	$(COMPOSE) $(CORE_FILES) logs -f --tail=200
+	$(COMPOSE) $(CORE) logs -f --tail=200
+
+logs-watchtower:
+	$(COMPOSE) $(CORE) $(WATCHTOWER) logs -f --tail=200 watchtower
 
 ps:
-	$(COMPOSE) $(CORE_FILES) ps
+	$(COMPOSE) $(CORE) ps
+
+pull:
+	$(COMPOSE) $(CORE) pull
+
+restart:
+	$(COMPOSE) $(CORE) restart
 
 health:
-	@echo "[health] Traefik"
-	@curl -fsS "http://localhost:$${TRAEFIK_WEB_PORT:-80}/" >/dev/null && echo "OK /" || echo "KO /"
-	@echo "[health] Auth via Traefik"
-	@curl -fsS "http://localhost:$${TRAEFIK_WEB_PORT:-80}/api/auth/health" >/dev/null && echo "OK /api/auth/health" || echo "KO /api/auth/health"
+	@echo "[check] front via Traefik" && curl -fsS "http://localhost:$${TRAEFIK_WEB_PORT:-80}/" >/dev/null && echo "OK front" || echo "KO front"
+	@echo "[check] auth via Traefik" && curl -fsS "http://localhost:$${TRAEFIK_WEB_PORT:-80}/api/auth/health" >/dev/null && echo "OK auth" || echo "KO auth"

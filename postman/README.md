@@ -1,27 +1,23 @@
-# Postman usage (infra)
+# Postman (stratégie d’environnements)
 
-La collection Postman API est générée/maintenue dans le repo `auth-service`.
-Ce dossier documente uniquement la stratégie d’exécution locale avec `infra`.
+Les collections/JSON Postman sont maintenus dans le repo `auth-service`.
+Dans `infra`, on documente uniquement la stratégie d’usage local.
 
-## Environnements recommandés
-
-### 1) Via Traefik (par défaut)
+## Environnement 1 : via Traefik (par défaut)
 - `baseUrl = http://localhost`
-- Exemple endpoint auth: `{{baseUrl}}/api/auth/login`
+- Exemple : `{{baseUrl}}/api/auth/login`
 
-Usage:
-- reproduit le comportement réel attendu côté front,
-- valide le routage gateway + StripPrefix.
+Usage recommandé pour tests d’intégration (comportement proche du front).
 
-### 2) Direct auth (debug)
+## Environnement 2 : direct auth (debug)
 - `baseUrl = http://127.0.0.1:${AUTH_HOST_PORT}`
-- Exemple endpoint auth (sans préfixe gateway): `{{baseUrl}}/login`
+- Exemple : `{{baseUrl}}/login`
 
-Usage:
-- troubleshooting rapide du service auth isolé,
-- nécessite `make up-direct`.
+Nécessite le mode direct :
+```bash
+make up-direct
+```
 
-## Bonnes pratiques
-- Préférer l’environnement “via Traefik” pour les tests d’intégration.
-- Réserver “direct” au debug ponctuel.
-- Vérifier la cohérence des paths (avec ou sans `/api/auth`) selon l’environnement.
+## Règle simple
+- Intégration : utiliser Traefik.
+- Debug ciblé auth : utiliser direct.

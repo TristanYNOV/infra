@@ -1,48 +1,31 @@
 # 10 - Architecture
 
-## Vue d’ensemble
-Architecture locale orientée gateway:
+## Vue d’ensemble (local)
 
 ```text
-[ Browser / Postman / curl ]
-              |
-              v
-      +-------------------+
-      |      Traefik      |
-      |   (entrypoint)    |
-      +-------------------+
-         |             |
-         |             |
-         v             v
- +---------------+  +----------------+
- | front-service |  |  auth-service  |
- |   (Angular)   |  |   (JWT API)    |
- +---------------+  +----------------+
+                      Host machine
+                           |
+                   http://localhost:80
+                           |
+                    +--------------+
+                    |   Traefik    |
+                    |  (gateway)   |
+                    +------+-------+
+                           |
+                     network: backend
+               +-----------+------------+
+               |                        |
+      PathPrefix(`/`)         PathPrefix(`/api/auth`)
+               |               + StripPrefix(`/api/auth`)
+               v                        v
+       +---------------+         +---------------+
+       | front-service |         | auth-service  |
+       | (Angular)     |         | (JWT API)     |
+       +---------------+         +---------------+
 ```
 
-## Flux HTTP
-- `GET /` et routes front: Traefik -> `front-service`.
-- `/*` front non API: Traefik -> `front-service`.
-- `/api/auth/*`: Traefik -> middleware `StripPrefix(/api/auth)` -> `auth-service`.
-
-## Responsabilités
-- **infra repo**
-  - conventions globales,
-  - routage cross-service,
-  - orchestration locale.
-- **front-service repo**
-  - build/run Angular,
-  - logique UI.
-- **auth-service repo**
-  - contrats API auth,
-  - logique JWT/metiers auth.
-
-## Règles de séparation
-1. Pas de logique métier dans `infra`.
-2. Pas de dépendance front -> auth en accès direct host par défaut.
-3. Toute nouvelle API doit être routée via un préfixe `/api/<service>`.
-4. Les variables runtime (images/ports) sont pilotées via `.env`.
-
-## Réseaux Docker (local)
-- Un réseau `edge` commun entre Traefik et les services routés.
-- Aucun port hôte publié pour `front-service` et `auth-service` dans le mode standard.
+## Décisions clés
+- Traefik est le seul composant exposé au host (`80`, dashboard local `127.0.0.1:8080`).
+- `front-service` et `auth-service` ne publient aucun port en mode normal.
+- Une seule network Docker (`backend`) pour les communications inter-services.
+- Le mode debug direct auth est isolé dans `docker-compose.direct.yml`.

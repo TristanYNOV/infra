@@ -1,55 +1,52 @@
 # 30 - Local development
 
-## Pré-requis
-- Docker + Docker Compose plugin
-- GNU Make (si utilisation du `Makefile`)
+## Prérequis
+- Docker + Docker Compose plugin.
+- Images `front-service` et `auth-service` accessibles localement/registry.
 
-## Configuration
-1. Copier les variables:
-   ```bash
-   cp .env.example .env
-   ```
-2. Renseigner les images réelles (`FRONT_IMAGE`, `AUTH_IMAGE`) et adapter les tags si besoin.
-
-## Modes Compose
-
-### Mode core (par défaut)
-Expose seulement Traefik sur l’hôte.
-
+## Setup
 ```bash
-make up
-make ps
-make logs
+cp .env.example .env
 ```
 
-### Mode direct debug (auth sans Traefik)
-Ajoute une publication locale pour `auth-service`.
+Adapter si nécessaire :
+- `FRONT_IMAGE`, `AUTH_IMAGE`
+- `FRONT_INTERNAL_PORT` (défaut `4200`)
+- `AUTH_INTERNAL_PORT` (défaut `3000`)
 
+## Démarrage
+### Mode core
+```bash
+make up
+```
+
+### Mode core + Watchtower (DEV/staging)
+```bash
+make up-watchtower
+```
+
+### Mode debug direct auth
 ```bash
 make up-direct
 ```
 
-> Ce mode est réservé au debug local/Postman ciblé. Ne pas l’utiliser comme mode standard d’intégration front.
-
-## Tests rapides
-
-### Via Traefik (mode standard)
+## Commandes utiles
 ```bash
-curl -i http://localhost:${TRAEFIK_WEB_PORT:-80}/
-curl -i http://localhost:${TRAEFIK_WEB_PORT:-80}/api/auth/health
+make ps
+make logs
+make pull
+make restart
+make health
+make down
 ```
 
-### Direct (mode debug)
+## Vérification rapide
+```bash
+curl -i http://localhost/
+curl -i http://localhost/api/auth/health
+```
+
+En mode direct:
 ```bash
 curl -i http://127.0.0.1:${AUTH_HOST_PORT}/health
 ```
-
-## Commandes utiles
-- `make up` / `make down`
-- `make up-direct`
-- `make logs`
-- `make ps`
-- `make health`
-
-## Notes Postman
-Voir [postman/README.md](../postman/README.md) pour la stratégie d’environnements “via Traefik” vs “direct debug”.
