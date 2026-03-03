@@ -1,16 +1,19 @@
 # 35 - Déploiement DEV/staging avec Watchtower (Option 1)
 
-## Pourquoi Watchtower
-En DEV/staging, Watchtower évite les redémarrages manuels :
-- il vérifie périodiquement les nouvelles versions d’images,
-- il fait le pull,
-- il redémarre les conteneurs ciblés.
+## Positionnement
+Cette stratégie est retenue pour la V1 **uniquement en DEV/staging**.
 
-## Comment ça marche ici
-- Service `watchtower` activable via profil Compose `watchtower`.
-- Surveillance **label-based** (`com.centurylinklabs.watchtower.enable=true`).
-- Cibles : `front-service` et `auth-service`.
-- Poll interval configurable via `WATCHTOWER_POLL_INTERVAL`.
+Objectif : simplifier l’exploitation quotidienne (auto-pull + restart) sans mettre en place de pipeline d’orchestration plus avancé.
+
+## Fonctionnement
+- `watchtower` tourne comme service Compose (profil `watchtower`).
+- Il surveille périodiquement les images distantes.
+- S’il détecte une image plus récente, il pull puis redémarre le conteneur ciblé.
+- Mode retenu : `--label-enable` pour limiter la portée aux services explicitement marqués.
+
+Dans cette stack, les cibles sont :
+- `front-service`
+- `auth-service`
 
 ## Activation
 ```bash
@@ -24,21 +27,22 @@ make down
 make up
 ```
 
-## Conventions de tags
-- DEV/staging : tags mouvants possibles (`dev`, `staging`, voire `latest` si assumé).
-- Production : préférer des tags immuables/versionnés (pas de `latest`).
+## Paramètres
+- `WATCHTOWER_POLL_INTERVAL` (secondes) dans `.env`.
+- Les services à surveiller sont contrôlés par le label :
+  - `com.centurylinklabs.watchtower.enable=true`
 
-## Observer une mise à jour
-1. Publier une nouvelle image avec le tag surveillé.
-2. Attendre l’intervalle de polling.
-3. Vérifier les logs :
-   ```bash
-   make logs-watchtower
-   ```
-4. Confirmer le redémarrage de `front-service` / `auth-service`.
+## Limites et risques
+- Watchtower requiert l’accès à `docker.sock` (surface sensible).
+- Un tag mutable (`latest`, `dev`) peut introduire une version inattendue.
+- Les redémarrages automatiques peuvent masquer l’absence de stratégie de déploiement maîtrisée.
+
+## Recommandation production
+Ne pas utiliser cette option en production sans garde-fous supplémentaires.
+Préférer des déploiements explicitement pilotés, images versionnées immuables, contrôles de rollout/rollback.
 
 ## Checklist sécurité
-- [ ] Watchtower limité aux environnements DEV/staging.
-- [ ] Socket Docker monté en lecture seule.
-- [ ] Mode label-enable activé pour limiter le scope.
-- [ ] Seuls les services nécessaires sont marqués `watchtower.enable=true`.
+- [ ] Usage limité DEV/staging.
+- [ ] `docker.sock` monté en lecture seule.
+- [ ] `--label-enable` activé.
+- [ ] Seuls les services nécessaires sont labellisés.

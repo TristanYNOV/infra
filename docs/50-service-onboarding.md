@@ -4,29 +4,36 @@ Checklist d’ajout d’un nouveau service dans `infra`.
 
 ## 1) Contrat API
 - [ ] Définir le basepath : `/api/<service>`.
-- [ ] Lister endpoints clés et statut auth (public/protégé).
+- [ ] Lister endpoints clés + statut auth (public/protégé).
+- [ ] Vérifier la compatibilité avec la convention de StripPrefix.
 
 ## 2) Contrat runtime
-- [ ] Déclarer `SERVICE_IMAGE` dans `.env.example`.
-- [ ] Déclarer `SERVICE_INTERNAL_PORT` dans `.env.example`.
-- [ ] Vérifier le port interne réel du conteneur.
+- [ ] Ajouter `<SERVICE>_IMAGE` dans `.env.example`.
+- [ ] Ajouter `<SERVICE>_INTERNAL_PORT` dans `.env.example`.
+- [ ] Vérifier le port interne réellement exposé par le conteneur.
 
 ## 3) Routage Traefik
 - [ ] Ajouter labels router `PathPrefix(`/api/<service>`)`.
-- [ ] Ajouter middleware `StripPrefix`.
+- [ ] Ajouter middleware `StripPrefix` correspondant.
 - [ ] Ajouter `loadbalancer.server.port` sur le port interne.
-- [ ] Vérifier les priorités de route si conflit possible.
+- [ ] Vérifier priorité de routes si conflit possible.
 
-## 4) Health & logs
-- [ ] Exposer un endpoint `/health` (ou équivalent documenté).
-- [ ] Vérifier les logs lisibles en stdout/stderr.
-- [ ] Ajouter une vérification dans `make health` si pertinent.
+## 4) Health, logs, debug
+- [ ] Exposer `/health` (ou documenter un équivalent).
+- [ ] Vérifier logs exploitables en stdout/stderr.
+- [ ] Mettre à jour `make health` si nécessaire.
+- [ ] Si debug direct utile, créer un override dédié localhost (pas dans le core compose).
 
 ## 5) Sécurité
-- [ ] Aucun `ports:` publié en mode core.
-- [ ] Si debug direct nécessaire, le faire dans un override dédié localhost.
-- [ ] Éviter secrets hardcodés; passer par variables d’environnement.
+- [ ] Aucun `ports:` en mode core pour le service.
+- [ ] Pas de secret hardcodé, uniquement via variables/env.
+- [ ] Valider le principe « Traefik unique point d’entrée HTTP ».
 
-## 6) Validation
+## 6) Watchtower (si DEV/staging)
+- [ ] Ajouter `com.centurylinklabs.watchtower.enable=true` si le service doit être auto-updaté.
+- [ ] Vérifier que le tag d’image utilisé est cohérent avec la stratégie d’environnement.
+
+## 7) Validation finale
 - [ ] Test via Traefik (`curl http://localhost/api/<service>/...`).
-- [ ] Mise à jour documentation (`README` + docs concernées).
+- [ ] Mise à jour docs (`README` + sections concernées).
+- [ ] Vérifier cohérence docs/config (pas d’écart entre description et compose).

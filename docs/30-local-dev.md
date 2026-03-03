@@ -1,34 +1,41 @@
 # 30 - Local development
 
 ## Prérequis
-- Docker + Docker Compose plugin.
-- Images `front-service` et `auth-service` accessibles localement/registry.
+- Docker Engine + Docker Compose plugin.
+- Images `front-service` et `auth-service` disponibles (locales ou registry).
 
-## Setup
+## Configuration
 ```bash
 cp .env.example .env
 ```
 
-Adapter si nécessaire :
+Variables clés à adapter :
 - `FRONT_IMAGE`, `AUTH_IMAGE`
 - `FRONT_INTERNAL_PORT` (défaut `4200`)
 - `AUTH_INTERNAL_PORT` (défaut `3000`)
+- `TRAEFIK_WEB_PORT`, `TRAEFIK_DASHBOARD_PORT`
 
 ## Démarrage
-### Mode core
+### 1) Mode core (recommandé)
 ```bash
 make up
 ```
 
-### Mode core + Watchtower (DEV/staging)
+### 2) Mode core + Watchtower (DEV/staging only)
 ```bash
 make up-watchtower
 ```
 
-### Mode debug direct auth
+### 3) Mode debug direct auth (localhost)
 ```bash
 make up-direct
 ```
+
+## URLs utiles
+- Front : `http://localhost/`
+- Auth via Traefik : `http://localhost/api/auth/...`
+- Dashboard Traefik : `http://127.0.0.1:8080/dashboard/`
+- Auth direct (mode direct uniquement) : `http://127.0.0.1:${AUTH_HOST_PORT}`
 
 ## Commandes utiles
 ```bash
@@ -46,7 +53,10 @@ curl -i http://localhost/
 curl -i http://localhost/api/auth/health
 ```
 
-En mode direct:
+En mode direct :
 ```bash
 curl -i http://127.0.0.1:${AUTH_HOST_PORT}/health
 ```
+
+## Postman
+Voir `postman/README.md` pour la stratégie des environnements (Traefik vs direct).
