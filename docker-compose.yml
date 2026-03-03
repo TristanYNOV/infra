@@ -10,32 +10,50 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
     networks:
-      - edge
+      - backend
 
   front-service:
     image: ${FRONT_IMAGE}
     networks:
-      - edge
+      - backend
     labels:
       - traefik.enable=true
       - traefik.http.routers.front.rule=PathPrefix(`/`)
       - traefik.http.routers.front.entrypoints=web
-      - traefik.http.routers.front.priority=100
+      - traefik.http.routers.front.priority=1
       - traefik.http.services.front.loadbalancer.server.port=${FRONT_INTERNAL_PORT}
+      - com.centurylinklabs.watchtower.enable=true
 
   auth-service:
     image: ${AUTH_IMAGE}
     networks:
-      - edge
+      - backend
     labels:
       - traefik.enable=true
       - traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)
       - traefik.http.routers.auth.entrypoints=web
-      - traefik.http.routers.auth.priority=200
+      - traefik.http.routers.auth.priority=100
       - traefik.http.routers.auth.middlewares=auth-strip
       - traefik.http.middlewares.auth-strip.stripPrefix.prefixes=/api/auth
       - traefik.http.services.auth.loadbalancer.server.port=${AUTH_INTERNAL_PORT}
+      - com.centurylinklabs.watchtower.enable=true
+
+  watchtower:
+    image: containrrr/watchtower:1.7.1
+    profiles:
+      - watchtower
+    command:
+      - --interval
+      - ${WATCHTOWER_POLL_INTERVAL:-30}
+      - --label-enable
+      - --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - backend
+    restart: unless-stopped
 
 networks:
-  edge:
-    name: infra-edge
+  backend:
+    name: infra-backend
+    internal: true

@@ -1,28 +1,29 @@
 # 00 - System context
 
-## Vision
-Plateforme d’analyse vidéo sportive en architecture microservices, avec un point d’entrée HTTP unique pour le client.
+## Contexte
+Le projet d’analyse vidéo est basé sur des microservices. À ce stade, deux services applicatifs existent :
+- `front-service` (Angular),
+- `auth-service` (JWT).
 
-## Objectifs MVP
-- Livrer un front web consommant l’auth API.
-- Uniformiser l’entrée HTTP via Traefik.
-- Éviter l’exposition directe des services internes en mode standard.
-- Rendre les conventions explicites avant l’arrivée de nouveaux services.
+## Objectif de cette base infra
+Créer un environnement local simple, reproductible et sécurisé où :
+- Traefik est l’unique entrée HTTP,
+- les services internes ne publient pas de ports hôte en mode normal,
+- les conventions d’équipe sont explicites.
 
-## Services existants
-- `front-service` (Angular): UI cliente.
-- `auth-service` (JWT): endpoints d’authentification.
-- `traefik` (gateway): routage HTTP et futur point de contrôle de sécurité transverse.
+## Invariants
+1. `infra` est la source de vérité pour l’orchestration locale.
+2. Les appels client passent via Traefik.
+3. Le routage auth se fait sous `/api/auth/*`.
+4. Le debug direct est un mode explicite, séparé du mode normal.
 
-## Principe fondamental
-**Traefik est l’unique entrypoint HTTP côté client.**
+## Périmètre de cette étape
+- Orchestration Docker Compose locale.
+- Routage Traefik pour front + auth.
+- Documentation d’onboarding.
+- Option Watchtower pour DEV/staging.
 
-Conséquences:
-- le front est servi derrière Traefik,
-- l’auth API est appelée via `/api/auth/*`,
-- l’accès direct à `auth-service` est désactivé par défaut (possible uniquement en mode debug explicite).
-
-## Hors périmètre de cette étape
-- Validation JWT au niveau gateway.
-- Stack d’observabilité (Prometheus/Tempo/Jaeger).
-- Infrastructure de production (K8s, cloud networking, etc.).
+## Hors périmètre
+- Hardening production.
+- Observabilité complète (implémentation).
+- Monitoring niveau 1/2 (uniquement roadmap documentaire).
