@@ -1,26 +1,30 @@
 # 40 - Observability roadmap
 
-> Cette page décrit le plan. Aucune implémentation n’est faite dans cette étape.
+> Document de planification uniquement (aucune implémentation dans ce repo à ce stade).
 
-## Niveau 1 (Monitoring de base)
-Objectif : savoir rapidement si la plateforme est saine.
-
-Prévoir :
-- health checks homogènes par service,
-- métriques HTTP essentielles (volumétrie, erreurs, latence),
-- tableau de bord de disponibilité,
-- alertes simples sur erreurs/indisponibilités.
-
-## Niveau 2 (Traçage distribué)
-Objectif : suivre une requête de bout en bout.
+## Niveau 1 - Monitoring opérationnel de base
+Objectif : détecter rapidement les indisponibilités et dégradations.
 
 Prévoir :
-- propagation `request-id` / `trace-id` entre services,
-- corrélation logs + traces,
+- endpoints health homogènes,
+- métriques HTTP principales (RPS, taux d’erreurs, latence p95/p99),
+- dashboard de disponibilité (gateway + services),
+- alertes de base (5xx, health KO, latence anormale).
+
+## Niveau 2 - Traçage distribué
+Objectif : suivre une requête front -> gateway -> service(s).
+
+Prévoir :
+- propagation d’identifiants (`request-id`, `trace-id`),
+- corrélation logs/traces,
 - visualisation des appels inter-services,
-- analyse des points de latence et erreurs.
+- analyse des goulots de latence.
 
-## Préparation dès maintenant
-- Stabiliser les routes (`/api/<service>`).
-- Standardiser endpoint health.
-- Conserver des logs exploitables et horodatés.
+## Préparation à faire dès maintenant
+- Conserver une convention de routes stable (`/api/<service>`).
+- Uniformiser un endpoint `/health`.
+- Écrire des logs structurés et horodatés.
+- Documenter les contrats d’erreur HTTP.
+
+## Explicitement hors scope V1
+- Pas d’intégration outillée type Prometheus/Tempo/Jaeger dans cette étape.

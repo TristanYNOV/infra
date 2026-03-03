@@ -1,29 +1,40 @@
 # 00 - System context
 
-## Contexte
-Le projet d’analyse vidéo est basé sur des microservices. À ce stade, deux services applicatifs existent :
-- `front-service` (Angular),
-- `auth-service` (JWT).
+## Produit
+Application web d’analyse vidéo sportive.
 
-## Objectif de cette base infra
-Créer un environnement local simple, reproductible et sécurisé où :
-- Traefik est l’unique entrée HTTP,
-- les services internes ne publient pas de ports hôte en mode normal,
-- les conventions d’équipe sont explicites.
+Le `front-service` (Angular) est l’application principale côté client : timeline, séquenceur, lecture vidéo en navigateur.
 
-## Invariants
-1. `infra` est la source de vérité pour l’orchestration locale.
-2. Les appels client passent via Traefik.
-3. Le routage auth se fait sous `/api/auth/*`.
-4. Le debug direct est un mode explicite, séparé du mode normal.
+## Cible d’architecture
+- Architecture microservices.
+- 1 repository par service applicatif.
+- `infra` centralise le contexte transverse + orchestration + conventions.
 
-## Périmètre de cette étape
-- Orchestration Docker Compose locale.
-- Routage Traefik pour front + auth.
-- Documentation d’onboarding.
-- Option Watchtower pour DEV/staging.
+## Services
+### Existant aujourd’hui
+1. `front-service` (Angular)
+2. `auth-service` (auth MVP : inscription, connexion, émission JWT)
 
-## Hors périmètre
-- Hardening production.
-- Observabilité complète (implémentation).
-- Monitoring niveau 1/2 (uniquement roadmap documentaire).
+### Prévu ensuite (non implémenté ici)
+- `export-service` (sauvegarde/export JSON timeline/séquenceur)
+
+## Règles réseau/sécurité globales
+- Traefik est l’unique point d’entrée HTTP.
+- Le client (navigateur/Postman en mode intégration) appelle Traefik.
+- Les services internes ne sont pas exposés directement par défaut.
+- Convention de routes : `/api/<service>/*`.
+
+## Auth : périmètre MVP
+Le `auth-service` est volontairement découplé des règles métier avancées (club/équipe/permissions fines).
+
+Rôle actuel :
+- inscription,
+- connexion,
+- émission JWT.
+
+Évolution prévue : vérification JWT au niveau Traefik (middleware dédié), **non activée dans cette V1**.
+
+## Objectif immédiat de ce repo infra
+- Fournir un environnement Docker local fonctionnel et sécurisé.
+- Permettre le test d’`auth-service` via Traefik (`/api/auth`).
+- Préparer le modèle de déploiement simple DEV/staging (Watchtower Option 1).
