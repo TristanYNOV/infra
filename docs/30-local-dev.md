@@ -2,61 +2,61 @@
 
 ## Prérequis
 - Docker Engine + Docker Compose plugin.
-- Images `front-service` et `auth-service` disponibles (locales ou registry).
+- Accès en lecture aux images GHCR privées `front-service` et `auth-service`.
 
-## Configuration
+## 1) Configuration
 ```bash
 cp .env.example .env
 ```
 
-Variables clés à adapter :
-- `FRONT_IMAGE`, `AUTH_IMAGE`
-- `FRONT_INTERNAL_PORT` (défaut `4200`)
-- `AUTH_INTERNAL_PORT` (défaut `3000`)
-- `TRAEFIK_WEB_PORT`, `TRAEFIK_DASHBOARD_PORT`
+Renseigner ensuite :
+- `FRONT_IMAGE`, `AUTH_IMAGE` (digest recommandé `@sha256:...`, sinon `:prod`),
+- variables sensibles `AUTH_JWT_SECRET`, `AUTH_ADMIN_*`,
+- variables auth runtime (`AUTH_DB_NAME`, `AUTH_JWT_EXPIRES_IN`, etc.).
 
-## Démarrage
-### 1) Mode core (recommandé)
+## 2) Login GHCR
 ```bash
+docker login ghcr.io
+```
+
+## 3) Lancer la stack
+```bash
+make pull
 make up
+make ps
 ```
 
-### 2) Mode core + Watchtower (DEV/staging only)
+## 4) Vérifier le routage
 ```bash
-make up-watchtower
-```
-
-### 3) Mode debug direct auth (localhost)
-```bash
-make up-direct
+curl -i http://localhost/
+curl -i http://localhost/health
+curl -i http://localhost/me
+curl -i http://localhost/users
 ```
 
 ## URLs utiles
-- Front : `http://localhost/`
-- Auth via Traefik : `http://localhost/api/auth/...`
+- Front via Traefik : `http://localhost/`
 - Dashboard Traefik : `http://127.0.0.1:8080/dashboard/`
-- Auth direct (mode direct uniquement) : `http://127.0.0.1:${AUTH_HOST_PORT}`
 
 ## Commandes utiles
 ```bash
-make ps
 make logs
-make pull
 make restart
 make health
 make down
+make config
 ```
 
-## Vérification rapide
-```bash
-curl -i http://localhost/
-curl -i http://localhost/api/auth/health
-```
+## Mise à jour d’image (pinning propre)
+1. Prendre le digest publié par le workflow applicatif.
+2. Remplacer `FRONT_IMAGE` ou `AUTH_IMAGE` dans `.env`.
+3. Relancer :
+   ```bash
+   make pull
+   make up
+   ```
 
-En mode direct :
-```bash
-curl -i http://127.0.0.1:${AUTH_HOST_PORT}/health
-```
-
-## Postman
-Voir `postman/README.md` pour la stratégie des environnements (Traefik vs direct).
+## Notes
+- Mongo reste interne Docker (`mongo:27017`).
+- `DATABASE_URL` côté auth doit viser le service Docker Mongo (par défaut `mongodb://mongo:27017`).
+- Le repo `infra` n’effectue aucun build applicatif local.

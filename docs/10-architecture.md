@@ -1,13 +1,19 @@
 # 10 - Architecture
 
 ## Vue textuelle
-- `infra` orchestre les conteneurs via Docker Compose.
+- `infra` orchestre des **images déjà publiées** (pas de build applicatif local).
 - Traefik route les requêtes HTTP vers les services internes.
-- `front-service` et `auth-service` communiquent via un réseau Docker privé commun (`infra-backend`).
-- Aucun port n’est publié pour les services applicatifs en mode core.
-- `docker-compose.direct.yml` fournit uniquement un mode de debug local explicite.
+- `front-service`, `auth-service` et `mongo` communiquent via le réseau Docker `infra-backend`.
+- Seuls les ports Traefik sont publiés en local (`80` + dashboard loopback).
+- Mongo n’est pas exposé sur l’hôte.
 
-## Schéma ASCII (local DEV)
+## Contrats utilisés comme source de vérité
+- `docs/contracts/auth-service/infra/INFRA_CONTRACT.md`
+- `docs/contracts/front-service/deployment/README.md`
+- `docs/contracts/front-service/deployment/reverse-proxy.md`
+- `docs/contracts/front-service/deployment/runtime-env.example`
+
+## Schéma ASCII (local V1)
 
 ```text
                                Host machine
@@ -21,23 +27,26 @@
              |  Traefik  |
              +-----+-----+
                    |
-             network: infra-backend (interne)
-          +--------+--------------------+
-          |                             |
- PathPrefix(`/`)                  PathPrefix(`/api/auth`)
- priority=1                       priority=100
-          |                       + StripPrefix(`/api/auth`)
-          v                             v
- +-------------------+         +--------------------+
- |   front-service   |         |    auth-service    |
- |      Angular      |         | signup/login/JWT   |
- +-------------------+         +--------------------+
-
- Optional profile: watchtower (DEV/staging only)
-   -> poll registry, pull, restart services labelisés
+                 network: infra-backend
+          +--------+-----------------------------+
+          |                                      |
+ PathPrefix(`/auth|/users|/me|/health`)   PathPrefix(`/`) priority=1
+ priority=100                             (fallback frontend)
+          |                                      |
+          v                                      v
+ +--------------------+                  +-------------------+
+ |    auth-service    |                  |   front-service   |
+ |       :3000        |                  |       :4000       |
+ +---------+----------+                  +-------------------+
+           |
+           v
+      +---------+
+      |  mongo  |
+      | :27017  |
+      +---------+
 ```
 
-## Vision cible (au-delà de la V1)
-- Ajout progressif de services sous `/api/<service>` (ex: `export-service`).
-- Les services construisent/publient leurs images dans leurs repos respectifs.
-- Ce repo `infra` orchestre pull/restart et conventions système.
+## Vision cible (après V1)
+- Garder le même modèle : gateway unique + services privés.
+- Ajouter des services supplémentaires avec règles Traefik explicites.
+- Continuer à déployer avec images immuables (digest GHCR) quand disponibles.

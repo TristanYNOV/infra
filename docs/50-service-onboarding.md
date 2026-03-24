@@ -3,37 +3,33 @@
 Checklist d’ajout d’un nouveau service dans `infra`.
 
 ## 1) Contrat API
-- [ ] Définir le basepath : `/api/<service>`.
+- [ ] Définir les préfixes réellement consommés par le front (ex: `/auth`, `/users`, `/me`).
 - [ ] Lister endpoints clés + statut auth (public/protégé).
-- [ ] Vérifier la compatibilité avec la convention de StripPrefix.
+- [ ] Éviter les réécritures Traefik non nécessaires.
 
 ## 2) Contrat runtime
 - [ ] Ajouter `<SERVICE>_IMAGE` dans `.env.example`.
-- [ ] Ajouter `<SERVICE>_INTERNAL_PORT` dans `.env.example`.
+- [ ] Pinner l’image par digest GHCR (`@sha256`) quand possible.
 - [ ] Vérifier le port interne réellement exposé par le conteneur.
 
 ## 3) Routage Traefik
-- [ ] Ajouter labels router `PathPrefix(`/api/<service>`)`.
-- [ ] Ajouter middleware `StripPrefix` correspondant.
-- [ ] Ajouter `loadbalancer.server.port` sur le port interne.
+- [ ] Ajouter labels router `PathPrefix(...)` explicites.
+- [ ] Ajouter `loadbalancer.server.port` sur le port interne réel.
 - [ ] Vérifier priorité de routes si conflit possible.
+- [ ] Garder Traefik comme unique point d’entrée HTTP.
 
-## 4) Health, logs, debug
-- [ ] Exposer `/health` (ou documenter un équivalent).
-- [ ] Vérifier logs exploitables en stdout/stderr.
+## 4) Health et exploitation
+- [ ] Exposer `/health` (ou équivalent documenté).
+- [ ] Ajouter un healthcheck Compose si possible.
 - [ ] Mettre à jour `make health` si nécessaire.
-- [ ] Si debug direct utile, créer un override dédié localhost (pas dans le core compose).
+- [ ] Vérifier logs exploitables en stdout/stderr.
 
 ## 5) Sécurité
 - [ ] Aucun `ports:` en mode core pour le service.
 - [ ] Pas de secret hardcodé, uniquement via variables/env.
-- [ ] Valider le principe « Traefik unique point d’entrée HTTP ».
+- [ ] Vérifier que les dépendances internes (DB, queue...) restent privées.
 
-## 6) Watchtower (si DEV/staging)
-- [ ] Ajouter `com.centurylinklabs.watchtower.enable=true` si le service doit être auto-updaté.
-- [ ] Vérifier que le tag d’image utilisé est cohérent avec la stratégie d’environnement.
-
-## 7) Validation finale
-- [ ] Test via Traefik (`curl http://localhost/api/<service>/...`).
+## 6) Validation finale
+- [ ] Test via Traefik (`curl http://localhost/...`).
 - [ ] Mise à jour docs (`README` + sections concernées).
 - [ ] Vérifier cohérence docs/config (pas d’écart entre description et compose).

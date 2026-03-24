@@ -1,48 +1,20 @@
-# 35 - Déploiement DEV/staging avec Watchtower (Option 1)
+# 35 - Déploiement DEV/staging avec Watchtower
 
-## Positionnement
-Cette stratégie est retenue pour la V1 **uniquement en DEV/staging**.
+## Statut
+Ce mode **n’est pas activé** dans la stack locale V1 courante.
 
-Objectif : simplifier l’exploitation quotidienne (auto-pull + restart) sans mettre en place de pipeline d’orchestration plus avancé.
+Le repo `infra` privilégie désormais un flux explicite :
+1. mettre à jour la référence d’image (`@sha256` recommandé),
+2. `make pull`,
+3. `make up`.
 
-## Fonctionnement
-- `watchtower` tourne comme service Compose (profil `watchtower`).
-- Il surveille périodiquement les images distantes.
-- S’il détecte une image plus récente, il pull puis redémarre le conteneur ciblé.
-- Mode retenu : `--label-enable` pour limiter la portée aux services explicitement marqués.
+## Pourquoi
+- Réduire la complexité opérationnelle locale.
+- Éviter les mises à jour implicites automatiques.
+- Garder un comportement reproductible proche d’un déploiement contrôlé.
 
-Dans cette stack, les cibles sont :
-- `front-service`
-- `auth-service`
-
-## Activation
-```bash
-make up-watchtower
-make logs-watchtower
-```
-
-## Désactivation
-```bash
-make down
-make up
-```
-
-## Paramètres
-- `WATCHTOWER_POLL_INTERVAL` (secondes) dans `.env`.
-- Les services à surveiller sont contrôlés par le label :
-  - `com.centurylinklabs.watchtower.enable=true`
-
-## Limites et risques
-- Watchtower requiert l’accès à `docker.sock` (surface sensible).
-- Un tag mutable (`latest`, `dev`) peut introduire une version inattendue.
-- Les redémarrages automatiques peuvent masquer l’absence de stratégie de déploiement maîtrisée.
-
-## Recommandation production
-Ne pas utiliser cette option en production sans garde-fous supplémentaires.
-Préférer des déploiements explicitement pilotés, images versionnées immuables, contrôles de rollout/rollback.
-
-## Checklist sécurité
-- [ ] Usage limité DEV/staging.
-- [ ] `docker.sock` monté en lecture seule.
-- [ ] `--label-enable` activé.
-- [ ] Seuls les services nécessaires sont labellisés.
+## Si Watchtower est réintroduit plus tard
+- le faire uniquement en DEV/staging,
+- forcer `--label-enable`,
+- conserver `docker.sock` en lecture seule,
+- documenter précisément les services surveillés.
