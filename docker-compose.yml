@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.1.7
     command:
       - --configFile=/etc/traefik/traefik.yml
     ports:
@@ -11,9 +11,12 @@ services:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
     networks:
       - backend
+    restart: unless-stopped
 
   front-service:
     image: ${FRONT_IMAGE}
+    environment:
+      PORT: "4000"
     networks:
       - backend
     labels:
@@ -21,39 +24,70 @@ services:
       - traefik.http.routers.front.rule=PathPrefix(`/`)
       - traefik.http.routers.front.entrypoints=web
       - traefik.http.routers.front.priority=1
-      - traefik.http.services.front.loadbalancer.server.port=${FRONT_INTERNAL_PORT}
-      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.services.front.loadbalancer.server.port=4000
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:4000,path:'/healthz',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
 
   auth-service:
     image: ${AUTH_IMAGE}
+    environment:
+      PORT: "3000"
+      NODE_ENV: ${AUTH_NODE_ENV:-production}
+      STRICT_ENV: ${AUTH_STRICT_ENV:-true}
+      DATABASE_URL: ${AUTH_DATABASE_URL:-mongodb://mongo:27017}
+      DB_NAME: ${AUTH_DB_NAME}
+      JWT_SECRET: ${AUTH_JWT_SECRET}
+      JWT_EXPIRES_IN: ${AUTH_JWT_EXPIRES_IN}
+      JWT_ISSUER: ${AUTH_JWT_ISSUER:-}
+      JWT_AUDIENCE: ${AUTH_JWT_AUDIENCE:-}
+      SALT: ${AUTH_SALT}
+      ADMIN_EMAIL: ${AUTH_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
+      ADMIN_PSEUDO: ${AUTH_ADMIN_PSEUDO}
     networks:
       - backend
+    depends_on:
+      mongo:
+        condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)
+      - traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/users`) || PathPrefix(`/me`) || PathPrefix(`/health`)
       - traefik.http.routers.auth.entrypoints=web
       - traefik.http.routers.auth.priority=100
-      - traefik.http.routers.auth.middlewares=auth-strip
-      - traefik.http.middlewares.auth-strip.stripPrefix.prefixes=/api/auth
-      - traefik.http.services.auth.loadbalancer.server.port=${AUTH_INTERNAL_PORT}
-      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.services.auth.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:3000,path:'/health',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
 
-  watchtower:
-    image: containrrr/watchtower:1.7.1
-    profiles:
-      - watchtower
-    command:
-      - --interval
-      - ${WATCHTOWER_POLL_INTERVAL:-30}
-      - --label-enable
-      - --cleanup
+  mongo:
+    image: mongo:7.0.18
+    command: ["--bind_ip_all"]
+    environment:
+      MONGO_INITDB_DATABASE: ${AUTH_DB_NAME}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - mongo-data:/data/db
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://127.0.0.1:27017/admin", "--eval", "db.adminCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     restart: unless-stopped
 
 networks:
   backend:
     name: infra-backend
-    internal: true
+
+volumes:
+  mongo-data:

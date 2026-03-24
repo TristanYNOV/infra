@@ -1,36 +1,38 @@
 # 20 - Routing & sécurité
 
-## Routage Traefik (DEV/local)
-- `/` -> `front-service`
-- `/api/auth/*` -> `auth-service`
-- Middleware `StripPrefix(/api/auth)` appliqué au router auth.
-- Convention future standardisée : `/api/<service>/*`.
+## Routage Traefik (DEV/local V1)
+- `/auth` -> `auth-service`
+- `/users` -> `auth-service`
+- `/me` -> `auth-service`
+- `/health` -> `auth-service` (health endpoint)
+- `/` (et tout le reste) -> `front-service`
+
+Aucun `StripPrefix` n’est appliqué : les routes sont forwardées telles quelles.
+
+Note: le contrat importé `auth-service` mentionne encore `/api/auth` + `StripPrefix`; la V1 locale de ce repo applique les routes relatives déjà utilisées par `front-service` (`/auth`, `/users`, `/me`).
 
 ## Pourquoi ce choix
-- Un point d’entrée unique simplifie le modèle réseau.
-- Le front consomme les APIs via le même host (`localhost`) ; CORS simplifié en local.
-- Les règles de routing deviennent homogènes pour tous les futurs services.
+- Le front consomme déjà des chemins relatifs en production (`/auth/login`, `/users`, `/auth/refresh`, `/auth/logout`, `/me`).
+- Même origine (`localhost`) => modèle réseau simple et CORS évité en local.
+- Contrat reverse proxy front respecté (SSR et deep-link forwardés sans transformation).
 
-## Règles de sécurité locales (core)
+## Règles de sécurité locales
 1. Traefik est le seul service avec `ports:` publiés.
-2. `front-service` et `auth-service` restent internes au réseau Docker.
+2. `front-service`, `auth-service` et `mongo` restent privés sur le réseau Docker.
 3. Dashboard Traefik exposé uniquement en loopback (`127.0.0.1:8080`).
-4. `providers.docker.exposedByDefault=false` (opt-in explicite via labels).
-5. Socket Docker monté en lecture seule pour Traefik et Watchtower.
+4. `providers.docker.exposedByDefault=false` (opt-in via labels).
+5. Socket Docker montée en lecture seule pour Traefik.
+6. Mongo n’est pas publié vers l’hôte.
 
-## Mode debug direct auth
-- Le fichier `docker-compose.direct.yml` expose `auth-service` sur `127.0.0.1:${AUTH_HOST_PORT}`.
-- Ce mode est volontairement séparé du mode core.
-- À utiliser pour debug ciblé uniquement.
-
-## JWT et évolution sécurité
-- V1 actuelle : Traefik fait uniquement du routage.
-- Étape suivante prévue : ajout d’un mécanisme de vérification JWT au niveau gateway.
-- Cette évolution doit préserver le découplage du `auth-service` (MVP auth sans logique métier avancée).
+## JWT (périmètre V1)
+- Traefik fait uniquement du reverse proxy.
+- Pas de validation JWT au niveau gateway pour cette V1.
+- La sécurité applicative JWT reste gérée par `auth-service`.
 
 ## Contrôles recommandés
 ```bash
 make ps
 curl -i http://localhost/
-curl -i http://localhost/api/auth/health
+curl -i http://localhost/health
+curl -i http://localhost/auth/login
 ```

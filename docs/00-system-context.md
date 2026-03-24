@@ -3,7 +3,7 @@
 ## Produit
 Application web d’analyse vidéo sportive.
 
-Le `front-service` (Angular) est l’application principale côté client : timeline, séquenceur, lecture vidéo en navigateur.
+Le `front-service` (Angular SSR) est l’application principale côté client : timeline, séquenceur, lecture vidéo en navigateur.
 
 ## Cible d’architecture
 - Architecture microservices.
@@ -12,7 +12,7 @@ Le `front-service` (Angular) est l’application principale côté client : time
 
 ## Services
 ### Existant aujourd’hui
-1. `front-service` (Angular)
+1. `front-service`
 2. `auth-service` (auth MVP : inscription, connexion, émission JWT)
 
 ### Prévu ensuite (non implémenté ici)
@@ -22,7 +22,7 @@ Le `front-service` (Angular) est l’application principale côté client : time
 - Traefik est l’unique point d’entrée HTTP.
 - Le client (navigateur/Postman en mode intégration) appelle Traefik.
 - Les services internes ne sont pas exposés directement par défaut.
-- Convention de routes : `/api/<service>/*`.
+- Mongo reste privé sur le réseau Docker.
 
 ## Auth : périmètre MVP
 Le `auth-service` est volontairement découplé des règles métier avancées (club/équipe/permissions fines).
@@ -36,5 +36,5 @@ Rôle actuel :
 
 ## Objectif immédiat de ce repo infra
 - Fournir un environnement Docker local fonctionnel et sécurisé.
-- Permettre le test d’`auth-service` via Traefik (`/api/auth`).
-- Préparer le modèle de déploiement simple DEV/staging (Watchtower Option 1).
+- Permettre le test d’`auth-service` via Traefik sur les routes `/auth`, `/users`, `/me`, `/health`.
+- Déployer localement des images GHCR privées avec pinning explicite (`@sha256` recommandé).
