@@ -18,16 +18,20 @@ La stack locale V1 s’appuie explicitement sur :
 - `traefik` = unique point d’entrée HTTP (`http://localhost`).
 - `front-service` (SSR Angular) servi derrière Traefik sur son **port conteneur 4000**.
 - `auth-service` servi derrière Traefik sur son **port conteneur 3000**.
+- `analysis-store-service` (profil Compose `analysis-store`) servi derrière Traefik sur son **port conteneur 3001**.
 - `mongo` interne Docker uniquement (pas d’exposition port hôte par défaut).
+- `postgres` interne Docker uniquement (profil `analysis-store`, pas d’exposition port hôte par défaut).
 
 ## Routage Traefik
 - `/auth`, `/users`, `/me`, `/health` -> `auth-service`
+- `/analysis-store` -> `analysis-store-service` (profil `analysis-store`)
 - tout le reste (`/`, pages SSR, assets) -> `front-service`
 
 ## Quickstart local
 ```bash
 cp .env.example .env
 # remplir les variables sensibles (JWT/admin) + images GHCR
+# optionnel: compléter les placeholders analysis-store (owner/tag/secrets)
 
 docker login ghcr.io
 
@@ -43,7 +47,7 @@ make health
 
 ## Mise à jour de version d’un service
 1. Récupérer le digest publié dans le workflow applicatif (`sha256:...`).
-2. Mettre à jour `FRONT_IMAGE` ou `AUTH_IMAGE` dans `.env` avec `ghcr.io/...@sha256:...`.
+2. Mettre à jour `FRONT_IMAGE`, `AUTH_IMAGE` et/ou `ANALYSIS_STORE_IMAGE` + `ANALYSIS_STORE_IMAGE_TAG` dans `.env` avec les références publiées.
 3. Relancer :
    ```bash
    make pull
@@ -57,4 +61,5 @@ make health
 - [00 - System context](docs/00-system-context.md)
 - [40 - Observability roadmap](docs/40-observability-roadmap.md)
 - [50 - Service onboarding](docs/50-service-onboarding.md)
+- [Contrat infra analysis-store](docs/contracts/analysis-store/infra/README.md)
 - [ADR 0001](docs/adr/0001-infra-source-of-truth.md)
