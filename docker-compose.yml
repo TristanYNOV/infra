@@ -86,7 +86,7 @@ services:
     restart: unless-stopped
 
   analysis-store-service:
-    image: ${ANALYSIS_STORE_IMAGE}:${ANALYSIS_STORE_IMAGE_TAG}
+    image: ${ANALYSIS_STORE_IMAGE}
     profiles: ["analysis-store"]
     environment:
       NODE_ENV: ${ANALYSIS_STORE_NODE_ENV:-production}

@@ -47,7 +47,7 @@ make health
 
 ## Mise à jour de version d’un service
 1. Récupérer le digest publié dans le workflow applicatif (`sha256:...`).
-2. Mettre à jour `FRONT_IMAGE`, `AUTH_IMAGE` et/ou `ANALYSIS_STORE_IMAGE` + `ANALYSIS_STORE_IMAGE_TAG` dans `.env` avec les références publiées.
+2. Mettre à jour `FRONT_IMAGE`, `AUTH_IMAGE` et/ou `ANALYSIS_STORE_IMAGE` dans `.env` avec la référence complète publiée (`:<tag>` ou `@sha256:<digest>`).
 3. Relancer :
    ```bash
    make pull
