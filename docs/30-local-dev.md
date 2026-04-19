@@ -34,7 +34,7 @@ curl -i http://localhost/
 curl -i http://localhost/health
 curl -i http://localhost/me
 curl -i http://localhost/users
-curl -i http://localhost/analysis-store/api/health
+curl -i http://localhost/analysis/api/health
 ```
 
 ## URLs utiles

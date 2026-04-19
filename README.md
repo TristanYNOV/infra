@@ -20,8 +20,13 @@ Services démarrés par le compose principal :
 
 Routage Traefik :
 - `/auth`, `/users`, `/me`, `/health` -> `auth-service`
-- `/analysis-store` -> `analysis-store-service`
+- `/analysis` -> `analysis-store-service` (Traefik strip `/analysis` avant backend)
 - tout le reste (`/`, pages SSR, assets) -> `front-service`
+
+Préfixe public analysis :
+- requête publique du front : `/analysis/api/...`
+- Traefik retire `/analysis` (StripPrefix)
+- backend `analysis-store-service` servi en interne sous `/api/...`
 
 Contexte identité/auth :
 - validation JWT en gateway (cible), puis propagation interne des headers d’identité (`x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles`) vers les services qui en dépendent.
@@ -54,7 +59,7 @@ Vérifications rapides :
 ```bash
 curl -i http://localhost/
 curl -i http://localhost/health
-curl -i http://localhost/analysis-store/api/health
+curl -i http://localhost/analysis/api/health
 ```
 
 Arrêt :

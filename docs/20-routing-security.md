@@ -5,12 +5,16 @@
 - `/users` -> `auth-service`
 - `/me` -> `auth-service`
 - `/health` -> `auth-service` (health endpoint)
-- `/analysis-store` -> `analysis-store-service`
+- `/analysis` -> `analysis-store-service` (middleware strip-prefix `/analysis`)
 - `/` (et tout le reste) -> `front-service`
 
-Aucun `StripPrefix` n’est appliqué : les routes sont forwardées telles quelles.
+`analysis-store-service` applique un `StripPrefix` sur `/analysis` pour conserver des routes backend internes en `/api/...`.
 
 Note: le contrat importé `auth-service` mentionne encore `/api/auth` + `StripPrefix`; la V1 locale de ce repo applique les routes relatives déjà utilisées par `front-service` (`/auth`, `/users`, `/me`).
+
+Exemple de flux analysis:
+- requête publique: `/analysis/api/panels`
+- requête backend reçue: `/api/panels`
 
 ## Pourquoi ce choix
 - Le front consomme déjà des chemins relatifs en production (`/auth/login`, `/users`, `/auth/refresh`, `/auth/logout`, `/me`).

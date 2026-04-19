@@ -101,10 +101,12 @@ services:
         condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.analysis-store.rule=PathPrefix(`/analysis-store`)
+      - traefik.http.routers.analysis-store.rule=PathPrefix(`/analysis`)
       - traefik.http.routers.analysis-store.entrypoints=web
       - traefik.http.routers.analysis-store.priority=90
+      - traefik.http.routers.analysis-store.middlewares=analysis-store-strip
       - traefik.http.services.analysis-store.loadbalancer.server.port=3001
+      - traefik.http.middlewares.analysis-store-strip.stripprefix.prefixes=/analysis
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:3001,path:'/api/health',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
       interval: 15s
