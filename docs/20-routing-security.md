@@ -5,7 +5,7 @@
 - `/users` -> `auth-service`
 - `/me` -> `auth-service`
 - `/health` -> `auth-service` (health endpoint)
-- `/analysis-store` -> `analysis-store-service` (profil `analysis-store`)
+- `/analysis-store` -> `analysis-store-service`
 - `/` (et tout le reste) -> `front-service`
 
 Aucun `StripPrefix` n’est appliqué : les routes sont forwardées telles quelles.

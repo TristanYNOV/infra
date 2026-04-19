@@ -3,7 +3,7 @@
 ## Prérequis
 - Docker Engine + Docker Compose plugin.
 - Accès en lecture aux images GHCR privées `front-service` et `auth-service`.
-- (Optionnel) accès GHCR pour `analysis-store-service` si vous activez le profil `analysis-store`.
+- Accès en lecture à l’image GHCR `analysis-store-service`.
 
 ## 1) Configuration
 ```bash
@@ -12,7 +12,7 @@ cp .env.example .env
 
 Renseigner ensuite :
 - `FRONT_IMAGE`, `AUTH_IMAGE` (digest recommandé `@sha256:...`, sinon `:prod`),
-- `ANALYSIS_STORE_IMAGE` (référence complète `:<tag>` ou `@sha256:<digest>`) si vous activez `analysis-store`,
+- `ANALYSIS_STORE_IMAGE` (référence complète `:<tag>` ou `@sha256:<digest>`),
 - variables sensibles `AUTH_JWT_SECRET`, `AUTH_ADMIN_*`,
 - variables auth runtime (`AUTH_DB_NAME`, `AUTH_JWT_EXPIRES_IN`, etc.).
 
@@ -34,7 +34,6 @@ curl -i http://localhost/
 curl -i http://localhost/health
 curl -i http://localhost/me
 curl -i http://localhost/users
-# optionnel (profil analysis-store actif)
 curl -i http://localhost/analysis-store/api/health
 ```
 
@@ -64,15 +63,3 @@ make config
 - Mongo reste interne Docker (`mongo:27017`).
 - `DATABASE_URL` côté auth doit viser le service Docker Mongo (par défaut `mongodb://mongo:27017`).
 - Le repo `infra` n’effectue aucun build applicatif local.
-
-
-## Profil optionnel analysis-store
-```bash
-docker compose --profile analysis-store pull
-docker compose --profile analysis-store up -d
-```
-
-Pré-requis dans `.env` :
-- `ANALYSIS_STORE_IMAGE` (référence complète GHCR avec tag ou digest),
-- `ANALYSIS_STORE_MASTER_KEY`,
-- `ANALYSIS_STORE_DB_PASSWORD`.

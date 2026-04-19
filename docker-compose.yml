@@ -87,7 +87,6 @@ services:
 
   analysis-store-service:
     image: ${ANALYSIS_STORE_IMAGE}
-    profiles: ["analysis-store"]
     environment:
       NODE_ENV: ${ANALYSIS_STORE_NODE_ENV:-production}
       PORT: "3001"
@@ -116,7 +115,6 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    profiles: ["analysis-store"]
     environment:
       POSTGRES_DB: ${ANALYSIS_STORE_DB_NAME:-analysis_store}
       POSTGRES_USER: ${ANALYSIS_STORE_DB_USER:-analysis_store}
