@@ -18,8 +18,9 @@ Exemple de flux analysis:
 
 Chaîne gateway pour analysis:
 1. suppression des headers `x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles` provenant du client
-2. validation du JWT via middleware Traefik `forwardAuth` vers `auth-service` (`/me`)
+2. validation du JWT via middleware Traefik `forwardAuth` vers l’endpoint interne `auth-service` `GET /internal/auth/context`, avec transmission explicite du header `Authorization`
 3. propagation vers `analysis-store-service` uniquement des headers d'identité renvoyés par `forwardAuth`
+4. `x-auth-club-ids` reste listé côté propagation même s’il n’est pas encore renvoyé actuellement par `auth-service` (compatibilité future)
 
 ## Pourquoi ce choix
 - Le front consomme déjà des chemins relatifs en production (`/auth/login`, `/users`, `/auth/refresh`, `/auth/logout`, `/me`).
