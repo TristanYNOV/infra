@@ -110,8 +110,9 @@ services:
       - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-user-id=
       - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-club-ids=
       - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-roles=
-      - traefik.http.middlewares.analysis-store-authn.forwardauth.address=http://auth-service:3000/me
+      - traefik.http.middlewares.analysis-store-authn.forwardauth.address=http://auth-service:3000/internal/auth/context
       - traefik.http.middlewares.analysis-store-authn.forwardauth.trustforwardheader=false
+      - traefik.http.middlewares.analysis-store-authn.forwardauth.authrequestheaders=Authorization
       - traefik.http.middlewares.analysis-store-authn.forwardauth.authresponseheaders=x-auth-user-id,x-auth-club-ids,x-auth-roles
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:3001,path:'/api/health',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
