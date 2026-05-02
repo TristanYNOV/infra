@@ -15,6 +15,7 @@ Services démarrés par le compose principal :
 - `front-service` : service front SSR (port conteneur `4000`).
 - `auth-service` : service d’authentification (port conteneur `3000`, dépend de `mongo`).
 - `analysis-store-service` : service de stockage d’analyses (port conteneur `3001`, dépend de `postgres`).
+- `analysis-store-migrate` : service one-shot exécutant les migrations PostgreSQL de `analysis-store-service`.
 - `mongo` : base interne pour `auth-service`.
 - `postgres` : base interne pour `analysis-store-service`.
 
@@ -62,6 +63,8 @@ make ps
 make health
 ```
 
+Le compose exécute automatiquement `analysis-store-migrate` (one-shot) avant `analysis-store-service`.
+
 Vérifications rapides :
 ```bash
 curl -i http://localhost/
@@ -91,6 +94,9 @@ Stratégie images GHCR :
 - **Image inchangée après update** : vérifier que tag/digest a réellement changé, puis relancer `make pull`.
 - **Doute sur la résolution compose** : exécuter `docker compose config`.
 - **Vérifier les images réellement lancées** : `docker compose ps` puis `docker inspect <container>`.
+- **Schéma PostgreSQL non initialisé** (volume existant/incohérent) :
+  1. `docker compose run --rm analysis-store-migrate`
+  2. `docker compose up -d analysis-store-service`
 
 ## Documentation
 - [10 - Architecture](docs/10-architecture.md)
