@@ -16,6 +16,11 @@ Exemple de flux analysis:
 - requête publique: `/analysis/api/panels`
 - requête backend reçue: `/api/panels`
 
+Chaîne gateway pour analysis:
+1. suppression des headers `x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles` provenant du client
+2. validation du JWT via middleware Traefik `forwardAuth` vers `auth-service` (`/me`)
+3. propagation vers `analysis-store-service` uniquement des headers d'identité renvoyés par `forwardAuth`
+
 ## Pourquoi ce choix
 - Le front consomme déjà des chemins relatifs en production (`/auth/login`, `/users`, `/auth/refresh`, `/auth/logout`, `/me`).
 - Même origine (`localhost`) => modèle réseau simple et CORS évité en local.
@@ -40,7 +45,7 @@ Le contrat `analysis-store` attend des headers internes injectés après validat
 - `x-auth-club-ids`
 - `x-auth-roles`
 
-En local V1, ces headers ne doivent pas être exposés comme entrées client publiques tant qu'un middleware gateway dédié n'est pas ajouté.
+Ces headers ne doivent jamais être pris depuis le client public; la gateway les fixe après validation JWT.
 
 ## Contrôles recommandés
 ```bash

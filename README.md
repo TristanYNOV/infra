@@ -28,8 +28,13 @@ Préfixe public analysis :
 - Traefik retire `/analysis` (StripPrefix)
 - backend `analysis-store-service` servi en interne sous `/api/...`
 
+Chaîne d’auth analysis (gateway) :
+- Traefik supprime d'abord tout header client `x-auth-*` entrant
+- Traefik délègue la validation JWT à `auth-service` via `forwardAuth` sur `/me`
+- Traefik ne propage vers `analysis-store-service` que les headers d'identité retournés par cette validation (`x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles`)
+
 Contexte identité/auth :
-- validation JWT en gateway (cible), puis propagation interne des headers d’identité (`x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles`) vers les services qui en dépendent.
+- validation JWT en gateway via `forwardAuth` (endpoint `auth-service /me`), puis propagation interne des headers d’identité (`x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles`) vers les services qui en dépendent.
 
 ## Architecture du repo
 - `docker-compose.yml` : orchestration principale de tous les services.
