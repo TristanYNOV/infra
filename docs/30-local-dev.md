@@ -3,6 +3,7 @@
 ## Prérequis
 - Docker Engine + Docker Compose plugin.
 - Accès en lecture aux images GHCR privées `front-service` et `auth-service`.
+- Accès en lecture à l’image GHCR `analysis-store-service`.
 
 ## 1) Configuration
 ```bash
@@ -11,6 +12,7 @@ cp .env.example .env
 
 Renseigner ensuite :
 - `FRONT_IMAGE`, `AUTH_IMAGE` (digest recommandé `@sha256:...`, sinon `:prod`),
+- `ANALYSIS_STORE_IMAGE` (référence complète `:<tag>` ou `@sha256:<digest>`),
 - variables sensibles `AUTH_JWT_SECRET`, `AUTH_ADMIN_*`,
 - variables auth runtime (`AUTH_DB_NAME`, `AUTH_JWT_EXPIRES_IN`, etc.).
 
@@ -32,6 +34,7 @@ curl -i http://localhost/
 curl -i http://localhost/health
 curl -i http://localhost/me
 curl -i http://localhost/users
+curl -i http://localhost/analysis/api/health
 ```
 
 ## URLs utiles
@@ -49,7 +52,7 @@ make config
 
 ## Mise à jour d’image (pinning propre)
 1. Prendre le digest publié par le workflow applicatif.
-2. Remplacer `FRONT_IMAGE` ou `AUTH_IMAGE` dans `.env`.
+2. Remplacer `FRONT_IMAGE`, `AUTH_IMAGE` et/ou `ANALYSIS_STORE_IMAGE` dans `.env` (référence complète).
 3. Relancer :
    ```bash
    make pull

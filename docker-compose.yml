@@ -85,9 +85,65 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  analysis-store-service:
+    image: ${ANALYSIS_STORE_IMAGE}
+    environment:
+      NODE_ENV: ${ANALYSIS_STORE_NODE_ENV:-production}
+      PORT: "3001"
+      DATABASE_URL: ${ANALYSIS_STORE_DATABASE_URL:-postgres://analysis_store:${ANALYSIS_STORE_DB_PASSWORD}@postgres:5432/analysis_store}
+      MASTER_KEY: ${ANALYSIS_STORE_MASTER_KEY}
+      CRYPTO_KEY_VERSION: ${ANALYSIS_STORE_CRYPTO_KEY_VERSION:-v1}
+      DB_NAME: ${ANALYSIS_STORE_DB_NAME:-analysis_store}
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.analysis-store.rule=PathPrefix(`/analysis`)
+      - traefik.http.routers.analysis-store.entrypoints=web
+      - traefik.http.routers.analysis-store.priority=90
+      - traefik.http.routers.analysis-store.middlewares=analysis-store-sanitize,analysis-store-authn,analysis-store-strip
+      - traefik.http.services.analysis-store.loadbalancer.server.port=3001
+      - traefik.http.middlewares.analysis-store-strip.stripprefix.prefixes=/analysis
+      - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-user-id=
+      - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-club-ids=
+      - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-roles=
+      - traefik.http.middlewares.analysis-store-authn.forwardauth.address=http://auth-service:3000/me
+      - traefik.http.middlewares.analysis-store-authn.forwardauth.trustforwardheader=false
+      - traefik.http.middlewares.analysis-store-authn.forwardauth.authresponseheaders=x-auth-user-id,x-auth-club-ids,x-auth-roles
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:3001,path:'/api/health',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${ANALYSIS_STORE_DB_NAME:-analysis_store}
+      POSTGRES_USER: ${ANALYSIS_STORE_DB_USER:-analysis_store}
+      POSTGRES_PASSWORD: ${ANALYSIS_STORE_DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ANALYSIS_STORE_DB_USER:-analysis_store} -d ${ANALYSIS_STORE_DB_NAME:-analysis_store}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+
 networks:
   backend:
     name: infra-backend
 
 volumes:
   mongo-data:
+  postgres-data:

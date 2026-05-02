@@ -3,7 +3,7 @@
 ## Vue textuelle
 - `infra` orchestre des **images déjà publiées** (pas de build applicatif local).
 - Traefik route les requêtes HTTP vers les services internes.
-- `front-service`, `auth-service` et `mongo` communiquent via le réseau Docker `infra-backend`.
+- `front-service`, `auth-service`, `analysis-store-service`, `mongo` et `postgres` communiquent via le réseau Docker `infra-backend`.
 - Seuls les ports Traefik sont publiés en local (`80` + dashboard loopback).
 - Mongo n’est pas exposé sur l’hôte.
 
@@ -12,6 +12,7 @@
 - `docs/contracts/front-service/deployment/README.md`
 - `docs/contracts/front-service/deployment/reverse-proxy.md`
 - `docs/contracts/front-service/deployment/runtime-env.example`
+- `docs/contracts/analysis-store/infra/README.md`
 
 ## Schéma ASCII (local V1)
 

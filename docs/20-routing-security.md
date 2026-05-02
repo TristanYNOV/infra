@@ -5,11 +5,21 @@
 - `/users` -> `auth-service`
 - `/me` -> `auth-service`
 - `/health` -> `auth-service` (health endpoint)
+- `/analysis` -> `analysis-store-service` (middleware strip-prefix `/analysis`)
 - `/` (et tout le reste) -> `front-service`
 
-Aucun `StripPrefix` n’est appliqué : les routes sont forwardées telles quelles.
+`analysis-store-service` applique un `StripPrefix` sur `/analysis` pour conserver des routes backend internes en `/api/...`.
 
 Note: le contrat importé `auth-service` mentionne encore `/api/auth` + `StripPrefix`; la V1 locale de ce repo applique les routes relatives déjà utilisées par `front-service` (`/auth`, `/users`, `/me`).
+
+Exemple de flux analysis:
+- requête publique: `/analysis/api/panels`
+- requête backend reçue: `/api/panels`
+
+Chaîne gateway pour analysis:
+1. suppression des headers `x-auth-user-id`, `x-auth-club-ids`, `x-auth-roles` provenant du client
+2. validation du JWT via middleware Traefik `forwardAuth` vers `auth-service` (`/me`)
+3. propagation vers `analysis-store-service` uniquement des headers d'identité renvoyés par `forwardAuth`
 
 ## Pourquoi ce choix
 - Le front consomme déjà des chemins relatifs en production (`/auth/login`, `/users`, `/auth/refresh`, `/auth/logout`, `/me`).
@@ -25,9 +35,17 @@ Note: le contrat importé `auth-service` mentionne encore `/api/auth` + `StripPr
 6. Mongo n’est pas publié vers l’hôte.
 
 ## JWT (périmètre V1)
-- Traefik fait uniquement du reverse proxy.
-- Pas de validation JWT au niveau gateway pour cette V1.
+- Traefik fait uniquement du reverse proxy pour la stack actuellement active par défaut.
+- Pas de validation JWT au niveau gateway pour cette V1 par défaut.
 - La sécurité applicative JWT reste gérée par `auth-service`.
+
+## Contrat identité interne (`analysis-store-service`)
+Le contrat `analysis-store` attend des headers internes injectés après validation JWT en gateway :
+- `x-auth-user-id`
+- `x-auth-club-ids`
+- `x-auth-roles`
+
+Ces headers ne doivent jamais être pris depuis le client public; la gateway les fixe après validation JWT.
 
 ## Contrôles recommandés
 ```bash
