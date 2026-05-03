@@ -156,6 +156,17 @@ services:
     restart: unless-stopped
 
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    networks:
+      - backend
+
 networks:
   backend:
     name: infra-backend
@@ -163,3 +174,4 @@ networks:
 volumes:
   mongo-data:
   postgres-data:
+  uptime-kuma-data:
