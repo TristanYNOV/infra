@@ -1,0 +1,74 @@
+{
+  "uid": "analyse-basket-auth",
+  "title": "Analyse Basket - Auth",
+  "tags": ["analyse-basket", "auth-service"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Login attempts",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (status_code) (rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/auth/login\"}[5m]))", "legendFormat": "{{status_code}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Login success vs failure",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/auth/login\",status_code=~\"2..\"}[5m]))", "legendFormat": "success" },
+        { "expr": "sum(rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/auth/login\",status_code=~\"4..|5..\"}[5m]))", "legendFormat": "failure" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Refresh usage",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (status_code) (rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/auth/refresh\"}[5m]))", "legendFormat": "{{status_code}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Logout and register",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/auth/logout\"}[5m]))", "legendFormat": "logout" },
+        { "expr": "sum(rate(http_requests_total{service=\"auth-service\",method=\"POST\",route=\"/users\"}[5m]))", "legendFormat": "register" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Unauthorized responses",
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (route) (rate(http_requests_total{service=\"auth-service\",status_code=\"401\"}[5m]))", "legendFormat": "{{route}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Login latency",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"auth-service\",route=\"/auth/login\"}[5m])))", "legendFormat": "p95 /auth/login" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Refresh latency",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"auth-service\",route=\"/auth/refresh\"}[5m])))", "legendFormat": "p95 /auth/refresh" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Sessions deleted",
+      "gridPos": { "x": 8, "y": 16, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{service=\"auth-service\",method=\"DELETE\",route=~\"/auth/sessions.*\"}[5m]))", "legendFormat": "sessions deleted" }]
+    }
+  ]
+}

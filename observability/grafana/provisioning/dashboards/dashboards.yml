@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: Analyse Basket
+    orgId: 1
+    folder: Analyse Basket
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

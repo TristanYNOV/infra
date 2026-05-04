@@ -1,0 +1,90 @@
+{
+  "uid": "analyse-basket-services",
+  "title": "Analyse Basket - Services",
+  "tags": ["analyse-basket", "services"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "custom",
+        "query": "front-service,auth-service,analysis-store-service",
+        "current": { "text": "front-service", "value": "front-service" },
+        "options": [
+          { "text": "front-service", "value": "front-service", "selected": true },
+          { "text": "auth-service", "value": "auth-service", "selected": false },
+          { "text": "analysis-store-service", "value": "analysis-store-service", "selected": false }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request rate",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{service=\"$service\"}[5m]))", "legendFormat": "$service" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error rate",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{service=\"$service\",status_code=~\"5..\"}[5m]))", "legendFormat": "5xx" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests in flight",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (route) (http_requests_in_flight{service=\"$service\"})", "legendFormat": "{{route}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p50/p95/p99",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Status codes",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (status_code) (rate(http_requests_total{service=\"$service\"}[5m]))", "legendFormat": "{{status_code}}" }]
+    },
+    {
+      "type": "barchart",
+      "title": "Top routes",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "topk(10, sum by (route) (rate(http_requests_total{service=\"$service\"}[5m])))", "legendFormat": "{{route}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory and event loop",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "process_resident_memory_bytes{service=\"$service\"}", "legendFormat": "memory" },
+        { "expr": "nodejs_eventloop_lag_seconds{service=\"$service\"}", "legendFormat": "event loop lag" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Process CPU",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "rate(process_cpu_user_seconds_total{service=\"$service\"}[5m]) + rate(process_cpu_system_seconds_total{service=\"$service\"}[5m])", "legendFormat": "$service" }]
+    }
+  ]
+}

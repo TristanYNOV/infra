@@ -102,6 +102,7 @@ Stratégie images GHCR :
 - [10 - Architecture](docs/10-architecture.md)
 - [20 - Routing & sécurité](docs/20-routing-security.md)
 - [30 - Local dev](docs/30-local-dev.md)
+- [Observability V1](docs/observability.md)
 - [00 - System context](docs/00-system-context.md)
 - [40 - Observability roadmap](docs/40-observability-roadmap.md)
 - [50 - Service onboarding](docs/50-service-onboarding.md)
