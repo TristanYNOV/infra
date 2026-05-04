@@ -1,0 +1,62 @@
+{
+  "uid": "analyse-basket-analysis-store",
+  "title": "Analyse Basket - Analysis Store",
+  "tags": ["analyse-basket", "analysis-store-service"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Timelines operations",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"POST\",route=\"/api/timelines\"}[5m]))", "legendFormat": "create {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"PATCH\",route=\"/api/timelines/:id\"}[5m]))", "legendFormat": "update {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"DELETE\",route=\"/api/timelines/:id\"}[5m]))", "legendFormat": "delete {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"GET\",route=\"/api/timelines/:id/export\"}[5m]))", "legendFormat": "export {{status_code}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Panels operations",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"POST\",route=\"/api/panels\"}[5m]))", "legendFormat": "create {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"PATCH\",route=\"/api/panels/:id\"}[5m]))", "legendFormat": "update {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"DELETE\",route=\"/api/panels/:id\"}[5m]))", "legendFormat": "delete {{status_code}}" },
+        { "expr": "sum by (status_code) (rate(http_requests_total{service=\"analysis-store-service\",method=\"GET\",route=\"/api/panels/:id/export\"}[5m]))", "legendFormat": "export {{status_code}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Import validations",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (resource, result) (rate(analysis_import_validation_total[5m]))", "legendFormat": "{{resource}} {{result}}" },
+        { "expr": "sum by (resource) (rate(analysis_import_validation_failed_total[5m]))", "legendFormat": "{{resource}} failed" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Create / update / export latency",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket{service=\"analysis-store-service\",route=~\"/api/(timelines|panels).*\"}[5m])))", "legendFormat": "p95 {{route}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Errors by route",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (route, status_code) (rate(http_requests_total{service=\"analysis-store-service\",status_code=~\"4..|5..\"}[5m]))", "legendFormat": "{{route}} {{status_code}}" }]
+    }
+  ]
+}

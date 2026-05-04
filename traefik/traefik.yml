@@ -16,3 +16,6 @@ accessLog: {}
 
 log:
   level: INFO
+
+metrics:
+  prometheus: {}

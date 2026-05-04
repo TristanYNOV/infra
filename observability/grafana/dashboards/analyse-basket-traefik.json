@@ -1,0 +1,50 @@
+{
+  "uid": "analyse-basket-traefik",
+  "title": "Analyse Basket - Traefik",
+  "tags": ["analyse-basket", "traefik"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests by router",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (router) (rate(traefik_router_requests_total[5m]))", "legendFormat": "{{router}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by service",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (service) (rate(traefik_service_requests_total[5m]))", "legendFormat": "{{service}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Status codes",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (code) (rate(traefik_router_requests_total[5m]))", "legendFormat": "router {{code}}" },
+        { "expr": "sum by (code) (rate(traefik_service_requests_total[5m]))", "legendFormat": "service {{code}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Gateway latency p95",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le, router) (rate(traefik_router_request_duration_seconds_bucket[5m])))", "legendFormat": "{{router}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Backend latency p95",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le, service) (rate(traefik_service_request_duration_seconds_bucket[5m])))", "legendFormat": "{{service}}" }]
+    }
+  ]
+}
