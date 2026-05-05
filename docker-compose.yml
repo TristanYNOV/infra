@@ -83,10 +83,15 @@ services:
       ADMIN_EMAIL: ${AUTH_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
       ADMIN_PSEUDO: ${AUTH_ADMIN_PSEUDO}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD}@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-domain.events}
+      RABBITMQ_QUEUE_AUTH: ${RABBITMQ_QUEUE_AUTH:-auth-service.user-deletion}
     networks:
       - backend
     depends_on:
       mongo:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     labels:
       - traefik.enable=true
@@ -128,12 +133,17 @@ services:
       MASTER_KEY: ${ANALYSIS_STORE_MASTER_KEY}
       CRYPTO_KEY_VERSION: ${ANALYSIS_STORE_CRYPTO_KEY_VERSION:-v1}
       DB_NAME: ${ANALYSIS_STORE_DB_NAME:-analysis_store}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD}@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-domain.events}
+      RABBITMQ_QUEUE_ANALYSIS_STORE: ${RABBITMQ_QUEUE_ANALYSIS_STORE:-analysis-store-service.user-deletion}
     networks:
       - backend
     depends_on:
       analysis-store-migrate:
         condition: service_completed_successfully
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     labels:
       - traefik.enable=true
@@ -189,6 +199,25 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "127.0.0.1:${RABBITMQ_AMQP_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
 
   uptime-kuma:
     image: louislam/uptime-kuma:2
@@ -211,3 +240,4 @@ volumes:
   uptime-kuma-data:
   prometheus-data:
   grafana-data:
+  rabbitmq-data:

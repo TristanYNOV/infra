@@ -18,6 +18,7 @@ Services démarrés par le compose principal :
 - `analysis-store-migrate` : service one-shot exécutant les migrations PostgreSQL de `analysis-store-service`.
 - `mongo` : base interne pour `auth-service`.
 - `postgres` : base interne pour `analysis-store-service`.
+- `rabbitmq` : broker d'evenements metier AMQP, avec UI management locale.
 
 Routage Traefik :
 - `/auth`, `/users`, `/me`, `/health` -> `auth-service`
@@ -82,6 +83,7 @@ Variables clés :
 - Images : `FRONT_IMAGE`, `AUTH_IMAGE`, `ANALYSIS_STORE_IMAGE`
 - Auth : `AUTH_JWT_SECRET`, `AUTH_ADMIN_*`, `AUTH_DB_NAME`, etc.
 - Analysis store : `ANALYSIS_STORE_MASTER_KEY`, `ANALYSIS_STORE_DB_*`, `ANALYSIS_STORE_DATABASE_URL` (override optionnel)
+- RabbitMQ : `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, queues de suppression utilisateur
 
 Stratégie images GHCR :
 - Chaque variable `*_IMAGE` doit contenir une référence complète :
@@ -106,5 +108,6 @@ Stratégie images GHCR :
 - [00 - System context](docs/00-system-context.md)
 - [40 - Observability roadmap](docs/40-observability-roadmap.md)
 - [50 - Service onboarding](docs/50-service-onboarding.md)
+- [RabbitMQ domain events](docs/rabbitmq.md)
 - [Contrat infra analysis-store](docs/contracts/analysis-store/infra/README.md)
 - [ADR 0001](docs/adr/0001-infra-source-of-truth.md)
