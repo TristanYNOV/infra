@@ -3,29 +3,72 @@
 ## Objectif du document
 Documenter un arbitrage technique et ses conséquences.
 
+## Identification
+| Champ | Valeur |
+|---|---|
+| ID décision | À compléter |
+| Date | À compléter |
+| Statut | Proposée / Validée / Annulée |
+| Repo ou domaine concerné | À compléter |
+| Décideur | À compléter |
+| Personnes consultées | À compléter |
+
 ## Contexte
 À compléter.
 
-## Problème
+## Problème à résoudre
 À compléter.
 
+## Contraintes
+- À compléter
+
 ## Options étudiées
-| Option | Avantages | Inconvénients |
-|---|---|---|
-| À compléter | À compléter | À compléter |
+| Option | Description | Avantages | Inconvénients | Coût / complexité | Risque | Avis |
+|---|---|---|---|---|---|---|
+| À compléter | À compléter | À compléter | À compléter | À compléter | À compléter | À compléter |
 
 ## Critères de décision
-- À compléter
+- Sécurité
+- Maintenabilité
+- Coût
+- Performance
+- Scalabilité
+- Complexité
+- Délai
+- Impact utilisateur
+- Exploitation
 
 ## Décision retenue
 À compléter.
 
-## Conséquences
-- Positives : À compléter
-- Négatives : À compléter
+## Justification
+À compléter.
 
-## Risques
+## Conséquences positives
 - À compléter
 
+## Conséquences négatives ou limites
+- À compléter
+
+## Risques acceptés
+- À compléter
+
+## Impacts
+| Domaine | Impact | Action nécessaire | Responsable | Statut |
+|---|---|---|---|---|
+| Produit / Technique / Infra / Exploitation | À compléter | À compléter | À compléter | Ouvert / En cours / Clos |
+
+## Plan de mise en œuvre
+1. À compléter
+2. À compléter
+
 ## Rollback possible
-À compléter.
+- Possibilité : Oui / Non / Partiel
+- Conditions : À compléter
+- Étapes : À compléter
+- Limites : À compléter
+
+## Suivi
+- KPI ou critère de succès : À compléter
+- Date de revue : À compléter
+- Lien ticket / PR : À compléter
