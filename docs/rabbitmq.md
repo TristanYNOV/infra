@@ -64,3 +64,30 @@ http://localhost:15672
 ```
 
 Identifiants: `RABBITMQ_USER` / `RABBITMQ_PASSWORD` depuis `.env`.
+
+## Monitoring Prometheus
+
+RabbitMQ expose des metriques Prometheus via le plugin officiel `rabbitmq_prometheus`, active au demarrage par le fichier `rabbitmq/enabled_plugins` monte dans le conteneur. Le fichier `rabbitmq/rabbitmq.conf` fixe le port interne de l'exporter a `15692`.
+
+Le endpoint est disponible dans le reseau Docker a l'adresse:
+
+```text
+http://rabbitmq:15692/metrics
+```
+
+Ce port n'est pas publie sur l'hote dans le compose de reference. Prometheus scrape RabbitMQ via le job `rabbitmq` et la target `rabbitmq:15692`.
+
+Grafana provisionne le dashboard `Analyse Basket - RabbitMQ` depuis `observability/grafana/dashboards/analyse-basket-rabbitmq.json`. Il couvre la sante globale, la charge, les queues, les messages ready/unacked/totaux, les debits publish/deliver-get/ack, les consumers, les connexions/channels, la memoire, le disque et les alarmes.
+
+### Verification locale
+
+```bash
+docker compose ps rabbitmq
+docker compose exec prometheus wget -qO- http://rabbitmq:15692/metrics
+```
+
+Dans Prometheus (`http://localhost:9090`), verifier `Status > Targets` puis la target `rabbitmq`. Dans Grafana (`http://localhost:3003`), ouvrir le dossier `Analyse Basket` puis le dashboard `Analyse Basket - RabbitMQ`.
+
+### Precautions production
+
+Ne pas exposer publiquement les ports `5672`, `15672` ou `15692` sans filtrage reseau, authentification adaptee et TLS. Le endpoint metrics peut reveler des informations operationnelles sensibles comme les noms de queues, les volumes de messages et l'etat des ressources.

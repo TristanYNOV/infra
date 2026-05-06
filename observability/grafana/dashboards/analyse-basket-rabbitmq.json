@@ -1,0 +1,496 @@
+{
+  "uid": "analyse-basket-rabbitmq",
+  "title": "Analyse Basket - RabbitMQ",
+  "tags": [
+    "analyse-basket",
+    "rabbitmq",
+    "messaging"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "RabbitMQ target UP",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"rabbitmq\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Queues",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queues)",
+          "legendFormat": "queues"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Consumers",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_consumers)",
+          "legendFormat": "consumers"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Connections",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_connections)",
+          "legendFormat": "connections"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Channels",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_channels)",
+          "legendFormat": "channels"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Alarms",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_node_mem_alarm) + sum(rabbitmq_node_disk_free_alarm)",
+          "legendFormat": "alarms"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Messages ready / unacked / total",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_messages_ready)",
+          "legendFormat": "ready"
+        },
+        {
+          "expr": "sum(rabbitmq_queue_messages_unacked)",
+          "legendFormat": "unacked"
+        },
+        {
+          "expr": "sum(rabbitmq_queue_messages)",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Message rates publish / deliver-get / ack",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_published_total[5m]))",
+          "legendFormat": "publish/s"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_delivered_total[5m])) or (sum(rate(rabbitmq_global_messages_delivered_consume_auto_ack_total[5m])) + sum(rate(rabbitmq_global_messages_delivered_consume_manual_ack_total[5m])) + sum(rate(rabbitmq_global_messages_delivered_get_auto_ack_total[5m])) + sum(rate(rabbitmq_global_messages_delivered_get_manual_ack_total[5m])))",
+          "legendFormat": "deliver/get/s"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total[5m]))",
+          "legendFormat": "ack/s"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Top queues by ready messages",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (queue, vhost) (rabbitmq_queue_messages_ready))",
+          "legendFormat": "{{vhost}}/{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Top queues by unacked messages",
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (queue, vhost) (rabbitmq_queue_messages_unacked))",
+          "legendFormat": "{{vhost}}/{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Top queues by consumers",
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (queue, vhost) (rabbitmq_queue_consumers))",
+          "legendFormat": "{{vhost}}/{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Queue depth over time",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (queue) (rabbitmq_queue_messages)",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Consumers / connections / channels",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_consumers)",
+          "legendFormat": "consumers"
+        },
+        {
+          "expr": "sum(rabbitmq_connections)",
+          "legendFormat": "connections"
+        },
+        {
+          "expr": "sum(rabbitmq_channels)",
+          "legendFormat": "channels"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Memory used",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rabbitmq_node_mem_used",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Disk free",
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rabbitmq_node_disk_free",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Memory / disk alarms",
+      "gridPos": {
+        "x": 16,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rabbitmq_node_mem_alarm",
+          "legendFormat": "memory alarm {{instance}}"
+        },
+        {
+          "expr": "rabbitmq_node_disk_free_alarm",
+          "legendFormat": "disk alarm {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Saturation indicators",
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_messages_unacked)",
+          "legendFormat": "unacked"
+        },
+        {
+          "expr": "sum(rabbitmq_queue_messages_ready)",
+          "legendFormat": "ready"
+        },
+        {
+          "expr": "sum(rabbitmq_queue_messages) / clamp_min(sum(rabbitmq_queue_consumers), 1)",
+          "legendFormat": "messages per consumer"
+        }
+      ]
+    }
+  ]
+}
