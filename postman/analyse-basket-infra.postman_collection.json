@@ -1,0 +1,456 @@
+{
+  "info": {
+    "name": "Analyse Basket - infra",
+    "_postman_id": "af70604d-1140-4ca5-bf17-ff2c5154fd31",
+    "description": "Collection globale pour tester la stack via infra/Traefik, y compris le workflow RabbitMQ de suppression utilisateur.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const useGateway = String(pm.environment.get('useGateway') || 'true') === 'true';",
+          "const gatewayBaseUrl = pm.environment.get('gatewayBaseUrl') || 'http://localhost';",
+          "pm.collectionVariables.set('authBaseUrl', useGateway ? gatewayBaseUrl : pm.environment.get('authDirectBaseUrl'));",
+          "pm.collectionVariables.set('analysisBaseUrl', useGateway ? `${gatewayBaseUrl}/analysis` : pm.environment.get('analysisDirectBaseUrl'));",
+          "pm.collectionVariables.set('frontBaseUrl', gatewayBaseUrl);",
+          "const requestName = pm.info.requestName || '';",
+          "const isRabbit = requestName.startsWith('RabbitMQ -');",
+          "const isAdmin = requestName.startsWith('Admin -');",
+          "const isDeletionCandidate = requestName.includes('deletion candidate') || requestName.includes('Deletion candidate');",
+          "let tokenKey = isAdmin ? 'accessTokenAdmin' : 'accessTokenUser';",
+          "if (isDeletionCandidate) tokenKey = 'accessTokenDeletionCandidate';",
+          "const token = pm.collectionVariables.get(tokenKey);",
+          "if (token && !isRabbit) {",
+          "  pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "}",
+          "if (!useGateway && requestName.startsWith('Analysis -')) {",
+          "  const userId = isDeletionCandidate ? pm.collectionVariables.get('deletionCandidateUserId') : pm.collectionVariables.get('userId');",
+          "  if (userId) pm.request.headers.upsert({ key: 'x-auth-user-id', value: userId });",
+          "  pm.request.headers.upsert({ key: 'x-auth-club-ids', value: pm.environment.get('clubIds') || '' });",
+          "  pm.request.headers.upsert({ key: 'x-auth-roles', value: isAdmin ? 'admin' : 'user' });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "authBaseUrl", "value": "http://localhost" },
+    { "key": "analysisBaseUrl", "value": "http://localhost/analysis" },
+    { "key": "frontBaseUrl", "value": "http://localhost" }
+  ],
+  "item": [
+    {
+      "name": "00 - Health / Front / Observability",
+      "item": [
+        {
+          "name": "Front - home",
+          "request": { "method": "GET", "url": "{{frontBaseUrl}}/" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('front responds', function () { pm.expect(pm.response.code).to.be.oneOf([200, 304]); });"] } }]
+        },
+        {
+          "name": "Front - healthz",
+          "request": { "method": "GET", "url": "{{frontBaseUrl}}/healthz" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('front health is 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Front - runtime config",
+          "request": { "method": "GET", "url": "{{frontBaseUrl}}/runtime-config.js" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('runtime config responds', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Front - metrics",
+          "request": { "method": "GET", "url": "{{frontBaseUrl}}/metrics" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('front metrics responds', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Auth - health",
+          "request": { "method": "GET", "url": "{{authBaseUrl}}/health" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('auth health is 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - health",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/health" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('analysis health is 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Prometheus - ready",
+          "request": { "method": "GET", "url": "{{prometheusBaseUrl}}/-/ready" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('prometheus is ready', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Grafana - health",
+          "request": { "method": "GET", "url": "{{grafanaBaseUrl}}/api/health" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('grafana health is 200', function () { pm.response.to.have.status(200); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "10 - Auth user",
+      "item": [
+        {
+          "name": "User - register",
+          "event": [
+            { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["const suffix = Date.now();", "pm.collectionVariables.set('userEmail', `postman_user_${suffix}@example.com`);", "pm.collectionVariables.set('userPseudo', `postman_user_${suffix}`);", "pm.collectionVariables.set('userPassword', `StrongPass1!${suffix}`);"] } },
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('user register returns 201', function () { pm.response.to.have.status(201); });"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"pseudo\": \"{{userPseudo}}\",\n  \"password\": \"{{userPassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/users"
+          }
+        },
+        {
+          "name": "User - login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('user login returns 201', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "const token = typeof body === 'string' ? body : body.accessToken;", "pm.collectionVariables.set('accessTokenUser', token);", "const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));", "pm.collectionVariables.set('userId', payload.sub);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "User - refresh",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('refresh returns 200', function () { pm.response.to.have.status(200); });", "const body = pm.response.json();", "if (body.accessToken) pm.collectionVariables.set('accessTokenUser', body.accessToken);"] } }],
+          "request": { "method": "POST", "url": "{{authBaseUrl}}/auth/refresh" }
+        },
+        {
+          "name": "User - me",
+          "request": { "method": "GET", "url": "{{authBaseUrl}}/me" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('me returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "User - patch me",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pseudo\": \"{{userPseudo}}_patched\"\n}" },
+            "url": "{{authBaseUrl}}/me"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('patch me returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "User - sessions list",
+          "request": { "method": "GET", "url": "{{authBaseUrl}}/auth/sessions" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('sessions returns 200', function () { pm.response.to.have.status(200); });", "const sessions = pm.response.json();", "pm.test('sessions is array', function () { pm.expect(Array.isArray(sessions)).to.eql(true); });", "if (sessions.length > 0) pm.collectionVariables.set('sessionId', sessions[0].id);"] } }]
+        },
+        {
+          "name": "User - revoke session by id",
+          "request": { "method": "DELETE", "url": "{{authBaseUrl}}/auth/sessions/{{sessionId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('session revoke returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "User - revoke all sessions",
+          "request": { "method": "DELETE", "url": "{{authBaseUrl}}/auth/sessions" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('all sessions revoke returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "User - logout",
+          "request": { "method": "POST", "url": "{{authBaseUrl}}/auth/logout" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('logout returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "User - refresh after logout expects 401",
+          "request": { "method": "POST", "url": "{{authBaseUrl}}/auth/refresh" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('refresh after logout returns 401', function () { pm.response.to.have.status(401); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "20 - Admin",
+      "item": [
+        {
+          "name": "Admin - login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin login returns 201', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "const token = typeof body === 'string' ? body : body.accessToken;", "pm.collectionVariables.set('accessTokenAdmin', token);", "const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));", "pm.collectionVariables.set('adminUserId', payload.sub);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Admin - list users",
+          "request": { "method": "GET", "url": "{{authBaseUrl}}/admin/users" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin list users returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Admin - register target user",
+          "event": [
+            { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["const suffix = Date.now();", "pm.collectionVariables.set('adminTargetEmail', `admin_target_${suffix}@example.com`);", "pm.collectionVariables.set('adminTargetPseudo', `admin_target_${suffix}`);", "pm.collectionVariables.set('adminTargetPassword', `StrongPass1!${suffix}`);"] } },
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin target register returns 201', function () { pm.response.to.have.status(201); });"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminTargetEmail}}\",\n  \"pseudo\": \"{{adminTargetPseudo}}\",\n  \"password\": \"{{adminTargetPassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/users"
+          }
+        },
+        {
+          "name": "Admin - login target user",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin target login returns 201', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "const token = typeof body === 'string' ? body : body.accessToken;", "const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));", "pm.collectionVariables.set('adminTargetUserId', payload.sub);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminTargetEmail}}\",\n  \"password\": \"{{adminTargetPassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Admin - patch target user",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pseudo\": \"{{adminTargetPseudo}}_patched\"\n}" },
+            "url": "{{authBaseUrl}}/admin/users/{{adminTargetUserId}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin patch returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Admin - delete target user",
+          "request": { "method": "DELETE", "url": "{{authBaseUrl}}/admin/users/{{adminTargetUserId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('admin delete returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "30 - Analysis store via gateway",
+      "item": [
+        {
+          "name": "Analysis - security context",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/security/context" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('security context returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - create timeline",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman timeline\",\n  \"description\": \"created from infra Postman\",\n  \"contentJson\": {\n    \"schemaVersion\": \"1.0.0\",\n    \"type\": \"analysis-timeline\",\n    \"timelineName\": \"Postman timeline\",\n    \"eventDefs\": [],\n    \"labelDefs\": [],\n    \"occurrences\": [],\n    \"ui\": { \"zoom\": 1, \"showLabels\": true, \"selectedOccurrenceId\": null }\n  },\n  \"hasAnonymizedContent\": false\n}" },
+            "url": "{{analysisBaseUrl}}/api/timelines"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('create timeline returns 201', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('timelineId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Analysis - list timelines",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/timelines" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('list timelines returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - get timeline",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/timelines/{{timelineId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('get timeline returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - patch timeline",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman timeline patched\"\n}" },
+            "url": "{{analysisBaseUrl}}/api/timelines/{{timelineId}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('patch timeline returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - export timeline",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/timelines/{{timelineId}}/export" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('export timeline returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - validate timeline import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"schemaVersion\": \"1.0.0\",\n  \"type\": \"analysis-timeline\",\n  \"timelineName\": \"Import timeline\",\n  \"meta\": { \"createdAtIso\": \"2026-05-06T10:00:00Z\", \"updatedAtIso\": \"2026-05-06T10:00:00Z\", \"exportedAtIso\": \"2026-05-06T10:00:00Z\", \"sourceUserId\": \"postman\", \"sourceApp\": \"postman\", \"sourceAppVersion\": \"1.0.0\" },\n  \"eventDefs\": [],\n  \"labelDefs\": [],\n  \"occurrences\": [],\n  \"ui\": { \"zoom\": 1, \"showLabels\": true, \"selectedOccurrenceId\": null }\n}" },
+            "url": "{{analysisBaseUrl}}/api/imports/timelines/validate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('timeline import validation returns 201', function () { pm.response.to.have.status(201); });"] } }]
+        },
+        {
+          "name": "Analysis - create panel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman panel\",\n  \"description\": \"created from infra Postman\",\n  \"contentJson\": {\n    \"schemaVersion\": \"1.0.0\",\n    \"type\": \"sequencer-panel\",\n    \"panelName\": \"Postman panel\",\n    \"btnList\": []\n  },\n  \"hasAnonymizedContent\": false\n}" },
+            "url": "{{analysisBaseUrl}}/api/panels"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('create panel returns 201', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('panelId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Analysis - list panels",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/panels" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('list panels returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - get panel",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/panels/{{panelId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('get panel returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - patch panel",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman panel patched\"\n}" },
+            "url": "{{analysisBaseUrl}}/api/panels/{{panelId}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('patch panel returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - copy panel",
+          "request": { "method": "POST", "url": "{{analysisBaseUrl}}/api/panels/{{panelId}}/copy" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('copy panel returns 201', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('copiedPanelId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Analysis - export panel",
+          "request": { "method": "GET", "url": "{{analysisBaseUrl}}/api/panels/{{panelId}}/export" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('export panel returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "Analysis - validate panel import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"schemaVersion\": \"1.0.0\",\n  \"type\": \"sequencer-panel\",\n  \"panelName\": \"Import panel\",\n  \"meta\": { \"createdAtIso\": \"2026-05-06T10:00:00Z\", \"updatedAtIso\": \"2026-05-06T10:00:00Z\", \"exportedAtIso\": \"2026-05-06T10:00:00Z\", \"sourceUserId\": \"postman\", \"sourceApp\": \"postman\", \"sourceAppVersion\": \"1.0.0\" },\n  \"btnList\": []\n}" },
+            "url": "{{analysisBaseUrl}}/api/imports/panels/validate"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('panel import validation returns 201', function () { pm.response.to.have.status(201); });"] } }]
+        },
+        {
+          "name": "Analysis - access check timeline",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ownerUserId\": \"{{userId}}\",\n  \"visibility\": \"private\"\n}" },
+            "url": "{{analysisBaseUrl}}/api/security/access-check/timeline"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('timeline access check returns 201', function () { pm.response.to.have.status(201); });"] } }]
+        },
+        {
+          "name": "Analysis - access check panel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ownerUserId\": \"{{userId}}\",\n  \"visibility\": \"private\"\n}" },
+            "url": "{{analysisBaseUrl}}/api/security/access-check/panel"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('panel access check returns 201', function () { pm.response.to.have.status(201); });"] } }]
+        },
+        {
+          "name": "Analysis - delete copied panel",
+          "request": { "method": "DELETE", "url": "{{analysisBaseUrl}}/api/panels/{{copiedPanelId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('delete copied panel returns 204', function () { pm.response.to.have.status(204); });"] } }]
+        },
+        {
+          "name": "Analysis - delete panel",
+          "request": { "method": "DELETE", "url": "{{analysisBaseUrl}}/api/panels/{{panelId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('delete panel returns 204', function () { pm.response.to.have.status(204); });"] } }]
+        },
+        {
+          "name": "Analysis - delete timeline",
+          "request": { "method": "DELETE", "url": "{{analysisBaseUrl}}/api/timelines/{{timelineId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('delete timeline returns 204', function () { pm.response.to.have.status(204); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "40 - RabbitMQ / user deletion workflow",
+      "item": [
+        {
+          "name": "Deletion candidate - register",
+          "event": [
+            { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["const suffix = Date.now();", "pm.collectionVariables.set('deletionCandidateEmail', `delete_candidate_${suffix}@example.com`);", "pm.collectionVariables.set('deletionCandidatePseudo', `delete_candidate_${suffix}`);", "pm.collectionVariables.set('deletionCandidatePassword', `StrongPass1!${suffix}`);"] } },
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('deletion candidate register returns 201', function () { pm.response.to.have.status(201); });"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{deletionCandidateEmail}}\",\n  \"pseudo\": \"{{deletionCandidatePseudo}}\",\n  \"password\": \"{{deletionCandidatePassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/users"
+          }
+        },
+        {
+          "name": "Deletion candidate - login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('deletion candidate login returns 201', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "const token = typeof body === 'string' ? body : body.accessToken;", "pm.collectionVariables.set('accessTokenDeletionCandidate', token);", "const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));", "pm.collectionVariables.set('deletionCandidateUserId', payload.sub);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{deletionCandidateEmail}}\",\n  \"password\": \"{{deletionCandidatePassword}}\"\n}" },
+            "url": "{{authBaseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Analysis - create timeline for deletion candidate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Delete candidate timeline\",\n  \"description\": \"resource used to test user deletion workflow\",\n  \"contentJson\": { \"schemaVersion\": \"1.0.0\", \"type\": \"analysis-timeline\", \"timelineName\": \"Delete candidate timeline\", \"eventDefs\": [], \"labelDefs\": [], \"occurrences\": [], \"ui\": { \"zoom\": 1, \"showLabels\": true, \"selectedOccurrenceId\": null } },\n  \"hasAnonymizedContent\": false\n}" },
+            "url": "{{analysisBaseUrl}}/api/timelines"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('candidate timeline created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('deletionCandidateTimelineId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Analysis - create panel for deletion candidate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Delete candidate panel\",\n  \"description\": \"resource used to test user deletion workflow\",\n  \"contentJson\": { \"schemaVersion\": \"1.0.0\", \"type\": \"sequencer-panel\", \"panelName\": \"Delete candidate panel\", \"btnList\": [] },\n  \"hasAnonymizedContent\": false\n}" },
+            "url": "{{analysisBaseUrl}}/api/panels"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('candidate panel created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('deletionCandidatePanelId', pm.response.json().id);"] } }]
+        },
+        {
+          "name": "Deletion candidate - delete me",
+          "request": { "method": "DELETE", "url": "{{authBaseUrl}}/me" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('delete me returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "RabbitMQ - overview",
+          "request": {
+            "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbitUser}}", "type": "string" }, { "key": "password", "value": "{{rabbitPassword}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{rabbitBaseUrl}}/api/overview"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('rabbit overview returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "RabbitMQ - analysis queue",
+          "request": {
+            "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbitUser}}", "type": "string" }, { "key": "password", "value": "{{rabbitPassword}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{rabbitBaseUrl}}/api/queues/%2F/{{rabbitAnalysisQueue}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('analysis queue returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "RabbitMQ - auth queue",
+          "request": {
+            "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbitUser}}", "type": "string" }, { "key": "password", "value": "{{rabbitPassword}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{rabbitBaseUrl}}/api/queues/%2F/{{rabbitAuthQueue}}"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('auth queue returns 200', function () { pm.response.to.have.status(200); });"] } }]
+        },
+        {
+          "name": "RabbitMQ - publish user.deletion.requested",
+          "request": {
+            "auth": { "type": "basic", "basic": [{ "key": "username", "value": "{{rabbitUser}}", "type": "string" }, { "key": "password", "value": "{{rabbitPassword}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {\n    \"delivery_mode\": 2,\n    \"content_type\": \"application/json\"\n  },\n  \"routing_key\": \"user.deletion.requested\",\n  \"payload_encoding\": \"string\",\n  \"payload\": \"{\\\"eventId\\\":\\\"{{$guid}}\\\",\\\"eventType\\\":\\\"user.deletion.requested\\\",\\\"version\\\":1,\\\"occurredAt\\\":\\\"{{$isoTimestamp}}\\\",\\\"producer\\\":\\\"postman\\\",\\\"correlationId\\\":\\\"{{$guid}}\\\",\\\"data\\\":{\\\"userId\\\":\\\"{{deletionCandidateUserId}}\\\",\\\"requestedBy\\\":\\\"self\\\",\\\"reason\\\":\\\"test\\\"}}\"\n}"
+            },
+            "url": "{{rabbitBaseUrl}}/api/exchanges/%2F/{{rabbitExchange}}/publish"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('rabbit publish accepted', function () { pm.response.to.have.status(200); });", "pm.test('rabbit routed event', function () { pm.expect(pm.response.json().routed).to.eql(true); });"] } }]
+        }
+      ]
+    }
+  ]
+}
