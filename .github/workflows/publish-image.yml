@@ -2,8 +2,10 @@ name: Publish infra image
 
 on:
   push:
+    branch:
+      -prod
     tags:
-      - "v.*.*.*"
+      - "v*.*.*"
 
 permissions:
   contents: read
