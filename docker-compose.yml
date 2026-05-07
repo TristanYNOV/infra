@@ -5,10 +5,12 @@ services:
       - --configFile=/etc/traefik/traefik.yml
     ports:
       - "${TRAEFIK_WEB_PORT:-80}:80"
+      - "${TRAEFIK_WEBSECURE_PORT:-443}:443"
       - "127.0.0.1:${TRAEFIK_DASHBOARD_PORT:-8080}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/letsencrypt:/letsencrypt
     networks:
       - backend
     restart: unless-stopped
@@ -58,6 +60,12 @@ services:
       - traefik.http.routers.front.rule=PathPrefix(`/`)
       - traefik.http.routers.front.entrypoints=web
       - traefik.http.routers.front.priority=1
+      - traefik.http.routers.front-secure.rule=Host(`${APP_DOMAIN:-app.actionboard.fr}`) && PathPrefix(`/`)
+      - traefik.http.routers.front-secure.entrypoints=websecure
+      - traefik.http.routers.front-secure.priority=1
+      - traefik.http.routers.front-secure.tls=true
+      - traefik.http.routers.front-secure.tls.certresolver=letsencrypt
+      - traefik.http.routers.front-secure.service=front
       - traefik.http.services.front.loadbalancer.server.port=4000
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:4000,path:'/healthz',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
@@ -98,6 +106,12 @@ services:
       - traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/users`) || PathPrefix(`/me`) || PathPrefix(`/health`)
       - traefik.http.routers.auth.entrypoints=web
       - traefik.http.routers.auth.priority=100
+      - traefik.http.routers.auth-secure.rule=Host(`${APP_DOMAIN:-app.actionboard.fr}`) && (PathPrefix(`/auth`) || PathPrefix(`/users`) || PathPrefix(`/me`) || PathPrefix(`/health`))
+      - traefik.http.routers.auth-secure.entrypoints=websecure
+      - traefik.http.routers.auth-secure.priority=100
+      - traefik.http.routers.auth-secure.tls=true
+      - traefik.http.routers.auth-secure.tls.certresolver=letsencrypt
+      - traefik.http.routers.auth-secure.service=auth
       - traefik.http.services.auth.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:3000,path:'/health',timeout:2000},res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));"]
@@ -151,6 +165,13 @@ services:
       - traefik.http.routers.analysis-store.entrypoints=web
       - traefik.http.routers.analysis-store.priority=90
       - traefik.http.routers.analysis-store.middlewares=analysis-store-sanitize,analysis-store-authn,analysis-store-strip
+      - traefik.http.routers.analysis-store-secure.rule=Host(`${APP_DOMAIN:-app.actionboard.fr}`) && PathPrefix(`/analysis`)
+      - traefik.http.routers.analysis-store-secure.entrypoints=websecure
+      - traefik.http.routers.analysis-store-secure.priority=90
+      - traefik.http.routers.analysis-store-secure.middlewares=analysis-store-sanitize,analysis-store-authn,analysis-store-strip
+      - traefik.http.routers.analysis-store-secure.tls=true
+      - traefik.http.routers.analysis-store-secure.tls.certresolver=letsencrypt
+      - traefik.http.routers.analysis-store-secure.service=analysis-store
       - traefik.http.services.analysis-store.loadbalancer.server.port=3001
       - traefik.http.middlewares.analysis-store-strip.stripprefix.prefixes=/analysis
       - traefik.http.middlewares.analysis-store-sanitize.headers.customrequestheaders.x-auth-user-id=

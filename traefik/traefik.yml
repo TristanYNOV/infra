@@ -1,6 +1,8 @@
 entryPoints:
   web:
     address: ":80"
+  websecure:
+    address: ":443"
 
 api:
   dashboard: true
@@ -11,6 +13,14 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: infra-backend
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "actionboard.admin@gmail.com"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: web
 
 accessLog: {}
 

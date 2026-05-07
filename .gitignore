@@ -1,2 +1,7 @@
 .idea
 .env
+.env.*
+!.env.example
+
+traefik/letsencrypt/
+**/acme.json
