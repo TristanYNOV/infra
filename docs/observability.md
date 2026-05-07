@@ -34,7 +34,7 @@ Pour vérifier: ouvrir Prometheus, puis `Status > Targets`.
 
 Grafana provisionne automatiquement:
 - la datasource Prometheus,
-- les dashboards du dossier `observability/grafana/dashboards`, dont `Analyse Basket - RabbitMQ`.
+- les dashboards du dossier `observability/grafana/dashboards`, dont `Analyse Basket - RabbitMQ` et `RabbitMQ Business Metrics`.
 
 Il n'y a pas d'import manuel à faire dans l'UI.
 
@@ -72,6 +72,8 @@ Le dashboard RabbitMQ permet de suivre:
 - le nombre de queues, consumers, connexions et channels;
 - la memoire utilisee, le disque disponible et les alarmes memoire/disque;
 - les queues les plus chargees et les signes de saturation comme les messages par consumer.
+
+Le dashboard `RabbitMQ Business Metrics` suit les evenements metier publies/consommes par `auth-service` et `analysis-store-service`, les latences de publication/traitement, le workflow de suppression utilisateur et le cleanup cote analysis-store. Voir [RabbitMQ Business Metrics dashboard](monitoring-rabbitmq-business-metrics.md).
 
 ## Validation manuelle RabbitMQ
 

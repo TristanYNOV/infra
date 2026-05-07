@@ -1,0 +1,527 @@
+{
+  "uid": "rabbitmq-business-metrics",
+  "title": "RabbitMQ Business Metrics",
+  "tags": ["analyse-basket", "rabbitmq", "business-metrics"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "label": "Datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "Prometheus",
+          "value": "prometheus"
+        }
+      },
+      {
+        "name": "service",
+        "type": "query",
+        "label": "Service",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(rabbitmq_business_events_published_total, service)",
+        "query": {
+          "query": "label_values(rabbitmq_business_events_published_total, service)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "regex": "/(auth-service|analysis-store-service)/",
+        "refresh": 1,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "auth-service|analysis-store-service",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "event_type",
+        "type": "query",
+        "label": "Event type",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(rabbitmq_business_events_consumed_total{service=~\"$service\"}, event_type)",
+        "query": {
+          "query": "label_values(rabbitmq_business_events_consumed_total{service=~\"$service\"}, event_type)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "routing_key",
+        "type": "query",
+        "label": "Routing key",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\"}, routing_key)",
+        "query": {
+          "query": "label_values(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\"}, routing_key)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "result",
+        "type": "custom",
+        "label": "Result",
+        "query": "success,failure,ignored,duplicate,invalid",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "A - Global RabbitMQ business view",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Published events / min",
+      "description": "Business RabbitMQ events published by the backends.",
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])) * 60",
+          "legendFormat": "published/min",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Consumed events / min",
+      "description": "Business RabbitMQ events consumed by the backends.",
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])) * 60",
+          "legendFormat": "consumed/min",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Publish failures / min",
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"failure\"}[5m])) * 60",
+          "legendFormat": "publish failures/min",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Consume failures / min",
+      "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"failure\"}[5m])) * 60",
+          "legendFormat": "consume failures/min",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Success ratio",
+      "description": "Share of successful published and consumed business events over the last 5 minutes.",
+      "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2, "min": 0, "max": 1 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "(sum(rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"success\"}[5m])) + sum(rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"success\"}[5m]))) / clamp_min(sum(rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\"}[5m])) + sum(rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\"}[5m])), 0.000000001)",
+          "legendFormat": "success ratio",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Ignored / duplicate / invalid consumed events",
+      "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(result) (rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"ignored|duplicate|invalid\"}[5m]))",
+          "legendFormat": "{{result}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "B - Event throughput",
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Publish / consume rate by event type",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(event_type) (rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"success\"}[5m]))",
+          "legendFormat": "publish {{event_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by(event_type) (rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=\"success\"}[5m]))",
+          "legendFormat": "consume {{event_type}}",
+          "refId": "B"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Publish / consume rate by routing key",
+      "gridPos": { "x": 0, "y": 13, "w": 24, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(routing_key) (rate(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m]))",
+          "legendFormat": "publish {{routing_key}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by(routing_key) (rate(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m]))",
+          "legendFormat": "consume {{routing_key}}",
+          "refId": "B"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 13,
+      "type": "row",
+      "title": "C - Business RabbitMQ latency",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Publish duration p50 / p95 / p99",
+      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by(le, event_type) (rate(rabbitmq_business_event_publish_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p50 {{event_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by(le, event_type) (rate(rabbitmq_business_event_publish_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p95 {{event_type}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by(le, event_type) (rate(rabbitmq_business_event_publish_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p99 {{event_type}}",
+          "refId": "C"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Consumer processing duration p50 / p95 / p99",
+      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by(le, event_type) (rate(rabbitmq_business_event_processing_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p50 {{event_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by(le, event_type) (rate(rabbitmq_business_event_processing_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p95 {{event_type}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by(le, event_type) (rate(rabbitmq_business_event_processing_duration_seconds_bucket{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[5m])))",
+          "legendFormat": "p99 {{event_type}}",
+          "refId": "C"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "D - Auth user deletion workflow",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Started vs completed vs failed",
+      "description": "Deletion workflow lifecycle emitted by auth-service.",
+      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        { "expr": "sum(rate(user_deletion_workflows_started_total{service=~\"$service\"}[5m]))", "legendFormat": "started", "refId": "A" },
+        { "expr": "sum(rate(user_deletion_workflows_completed_total{service=~\"$service\"}[5m]))", "legendFormat": "completed", "refId": "B" },
+        { "expr": "sum(rate(user_deletion_workflows_failed_total{service=~\"$service\"}[5m]))", "legendFormat": "failed", "refId": "C" }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Workflow failures by step",
+      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(failure_step) (rate(user_deletion_workflows_failed_total{service=~\"$service\"}[5m]))",
+          "legendFormat": "{{failure_step}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Workflow duration p95",
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by(le, result) (rate(user_deletion_workflow_duration_seconds_bucket{service=~\"$service\"}[5m])))",
+          "legendFormat": "p95 {{result}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 21,
+      "type": "row",
+      "title": "E - Analysis store cleanup",
+      "gridPos": { "x": 0, "y": 43, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Resources deleted or anonymized",
+      "description": "Resources affected by analysis-store-service during user cleanup.",
+      "gridPos": { "x": 0, "y": 44, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(resource, action) (rate(analysis_user_cleanup_resources_total{service=~\"$service\"}[5m]))",
+          "legendFormat": "{{resource}} {{action}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Cleanup resource rates",
+      "gridPos": { "x": 12, "y": 44, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        { "expr": "sum(rate(analysis_user_cleanup_resources_total{service=~\"$service\", resource=\"timeline\", action=\"deleted\"}[5m]))", "legendFormat": "timelines deleted", "refId": "A" },
+        { "expr": "sum(rate(analysis_user_cleanup_resources_total{service=~\"$service\", resource=\"private_panel\", action=\"deleted\"}[5m]))", "legendFormat": "private panels deleted", "refId": "B" },
+        { "expr": "sum(rate(analysis_user_cleanup_resources_total{service=~\"$service\", resource=\"public_panel\", action=\"anonymized\"}[5m]))", "legendFormat": "public panels anonymized", "refId": "C" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "horizontal", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" }
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "Cleanup duration p95",
+      "gridPos": { "x": 0, "y": 51, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by(le, result) (rate(analysis_user_cleanup_duration_seconds_bucket{service=~\"$service\"}[5m])))",
+          "legendFormat": "p95 {{result}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Cleanup failures / invalid / duplicate",
+      "gridPos": { "x": 12, "y": 51, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 3 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(result) (rate(analysis_user_cleanup_duration_seconds_count{service=~\"$service\", result=~\"failure|invalid|duplicate\"}[5m]))",
+          "legendFormat": "{{result}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } }
+    },
+    {
+      "id": 26,
+      "type": "row",
+      "title": "F - Diagnostic",
+      "gridPos": { "x": 0, "y": 58, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 27,
+      "type": "table",
+      "title": "Consumed events over the last hour",
+      "gridPos": { "x": 0, "y": 59, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(service, event_type, result) (increase(rabbitmq_business_events_consumed_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[1h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "options": { "showHeader": true, "cellHeight": "sm" }
+    },
+    {
+      "id": 28,
+      "type": "table",
+      "title": "Published events over the last hour",
+      "gridPos": { "x": 12, "y": 59, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(service, event_type, result) (increase(rabbitmq_business_events_published_total{service=~\"$service\", event_type=~\"$event_type\", routing_key=~\"$routing_key\", result=~\"$result\"}[1h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "options": { "showHeader": true, "cellHeight": "sm" }
+    },
+    {
+      "id": 29,
+      "type": "table",
+      "title": "Business errors over the last hour",
+      "gridPos": { "x": 0, "y": 67, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum by(service, event_type, result) (increase(rabbitmq_business_events_published_total{service=~\"$service\", result=\"failure\"}[1h])) or sum by(service, event_type, result) (increase(rabbitmq_business_events_consumed_total{service=~\"$service\", result=~\"failure|invalid|duplicate\"}[1h]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "options": { "showHeader": true, "cellHeight": "sm" }
+    }
+  ]
+}

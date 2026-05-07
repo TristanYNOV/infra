@@ -37,7 +37,17 @@ Le projet applique une **livraison continue** (build/publish automatisés) avec 
 | front-service | Publication sur `prod` | GHCR | SemVer | Manuel via `infra` | En place |
 | auth-service | Publication sur `prod` | GHCR | SemVer | Manuel via `infra` | En place |
 | analysis-store-service | Publication via tags | GHCR | SemVer | Manuel via `infra` | En place |
-| infra | N/A (pas de publication image applicative) | N/A | N/A | Manuel contrôlé | En place |
+| infra | Publication via tags `v.X.Y.Z` si commit contenu dans `prod` | GHCR | SemVer | Manuel contrôlé | En place |
+
+## Publication image infra
+Le repo `infra` publie une image GHCR privée uniquement lorsqu'un tag Git respecte le format `v.X.Y.Z` et pointe vers un commit déjà présent dans la branche `prod`.
+
+Pour un tag `v.1.0.0`, l'image publiée est `ghcr.io/<owner_lower>/infra` avec exactement les tags suivants :
+- `latest`
+- `prod`
+- `1.0.0`
+
+La publication est refusée si le tag ne respecte pas ce format ou si le commit taggé n'appartient pas à `prod`.
 
 ## Rollback
 - État actuel : aucun rollback formalisé officiellement.
