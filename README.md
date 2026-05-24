@@ -108,6 +108,7 @@ Stratégie images GHCR :
 - [00 - System context](docs/00-system-context.md)
 - [40 - Observability roadmap](docs/40-observability-roadmap.md)
 - [50 - Service onboarding](docs/50-service-onboarding.md)
+- [CD VPS production](docs/deployment/cd-vps.md)
 - [RabbitMQ domain events](docs/rabbitmq.md)
 - [Contrat infra analysis-store](docs/contracts/analysis-store/infra/README.md)
 - [ADR 0001](docs/adr/0001-infra-source-of-truth.md)

@@ -2,8 +2,6 @@ name: Publish infra image
 
 on:
   push:
-    branch:
-      -prod
     tags:
       - "v*.*.*"
 
@@ -47,7 +45,7 @@ jobs:
           fi
 
           repository="${GITHUB_REPOSITORY,,}"
-          version="${tag#v.}"
+          version="${tag#v}"
 
           {
             echo "image=${REGISTRY}/${repository}"

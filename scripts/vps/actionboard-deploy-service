@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SERVICE="${1:-}"
+INFRA_DIR="/opt/actionboard/infra"
+LOCK_FILE="/tmp/actionboard-prod-deploy.lock"
+
+case "${SERVICE}" in
+  front-service|auth-service|analysis-store-service|all)
+    ;;
+  *)
+    echo "Invalid service: ${SERVICE}" >&2
+    exit 2
+    ;;
+esac
+
+exec 9>"${LOCK_FILE}"
+flock -n 9 || {
+  echo "Another deployment is already running." >&2
+  exit 75
+}
+
+cd "${INFRA_DIR}"
+
+echo "==> Updating infra repository"
+git fetch origin prod
+git pull --ff-only origin prod
+
+echo "==> Validating compose configuration"
+docker compose config >/tmp/actionboard-compose-rendered.yml
+
+deploy_front() {
+  echo "==> Deploying front-service"
+  docker compose pull front-service
+  docker compose up -d front-service
+}
+
+deploy_auth() {
+  echo "==> Deploying auth-service"
+  docker compose pull auth-service
+  docker compose up -d auth-service
+}
+
+deploy_analysis_store() {
+  echo "==> Deploying analysis-store-service with migrations"
+  docker compose pull analysis-store-service analysis-store-migrate
+
+  echo "==> Ensuring dependencies are running"
+  docker compose up -d postgres rabbitmq
+
+  echo "==> Running analysis-store migrations"
+  docker compose run --rm analysis-store-migrate
+
+  echo "==> Starting analysis-store-service"
+  docker compose up -d analysis-store-service
+}
+
+deploy_all() {
+  echo "==> Pulling all images"
+  docker compose pull
+
+  echo "==> Starting dependencies"
+  docker compose up -d mongo postgres rabbitmq prometheus grafana traefik uptime-kuma
+
+  echo "==> Running analysis-store migrations"
+  docker compose run --rm analysis-store-migrate
+
+  echo "==> Starting application services"
+  docker compose up -d
+}
+
+case "${SERVICE}" in
+  front-service)
+    deploy_front
+    ;;
+  auth-service)
+    deploy_auth
+    ;;
+  analysis-store-service)
+    deploy_analysis_store
+    ;;
+  all)
+    deploy_all
+    ;;
+esac
+
+echo "==> Deployment status"
+docker compose ps

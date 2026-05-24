@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+original_command="${SSH_ORIGINAL_COMMAND:-}"
+
+case "${original_command}" in
+  "deploy-service front-service"|"deploy-service auth-service"|"deploy-service analysis-store-service"|"deploy-service all")
+    service="${original_command#deploy-service }"
+    exec /usr/local/bin/actionboard-deploy-service "${service}"
+    ;;
+  *)
+    echo "Refused command: ${original_command}" >&2
+    exit 126
+    ;;
+esac

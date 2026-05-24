@@ -1,0 +1,147 @@
+name: Deploy prod on VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Service to deploy
+        required: true
+        type: choice
+        options:
+          - front-service
+          - auth-service
+          - analysis-store-service
+          - all
+      version_tag:
+        description: Source SemVer tag that triggered the deployment
+        required: false
+        type: string
+      source_repository:
+        description: Source repository that triggered the deployment
+        required: false
+        type: string
+      source_sha:
+        description: Source commit SHA that triggered the deployment
+        required: false
+        type: string
+
+concurrency:
+  group: actionboard-prod-vps-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.service }} to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate input
+        shell: bash
+        env:
+          SERVICE: ${{ inputs.service }}
+          VERSION_TAG: ${{ inputs.version_tag }}
+          SOURCE_REPOSITORY: ${{ inputs.source_repository }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+  
+          case "${SERVICE}" in
+          front-service|auth-service|analysis-store-service|all)
+          echo "Service accepted: ${SERVICE}"
+          ;;
+          *)
+          echo "::error::Invalid service: ${SERVICE}"
+          exit 1
+          ;;
+          esac
+  
+          if [[ -n "${VERSION_TAG}" && ! "${VERSION_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "::error::Tag ${VERSION_TAG} is not a valid SemVer tag like v1.0.0"
+          exit 1
+          fi
+  
+          if [[ -n "${SOURCE_REPOSITORY}" && ! "${SOURCE_REPOSITORY}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+          echo "::error::Invalid source repository: ${SOURCE_REPOSITORY}"
+          exit 1
+          fi
+  
+          expected_repository=""
+          case "${SERVICE}" in
+          front-service)
+          expected_repository="tristanynov/front-service"
+          ;;
+          auth-service)
+          expected_repository="tristanynov/auth-service"
+          ;;
+          analysis-store-service)
+          expected_repository="tristanynov/analysis-store-service"
+          ;;
+          all)
+          expected_repository=""
+          ;;
+          esac
+  
+          if [[ "${SERVICE}" != "all" && -n "${SOURCE_REPOSITORY}" ]]; then
+          source_repository_lower="${SOURCE_REPOSITORY,,}"
+          
+          if [[ "${source_repository_lower}" != "${expected_repository}" ]]; then
+          echo "::error::Source repository ${SOURCE_REPOSITORY} does not match expected repository ${expected_repository} for service ${SERVICE}"
+          exit 1
+          fi
+          fi
+  
+          if [[ -n "${SOURCE_SHA}" && ! "${SOURCE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+          echo "::error::Invalid source SHA: ${SOURCE_SHA}"
+          exit 1
+          fi
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_DEPLOY_SSH_PRIVATE_KEY_B64: ${{ secrets.VPS_DEPLOY_SSH_PRIVATE_KEY_B64 }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s' "${VPS_DEPLOY_SSH_PRIVATE_KEY_B64}" | base64 -d > ~/.ssh/actionboard_vps_deploy_key
+          chmod 600 ~/.ssh/actionboard_vps_deploy_key
+
+          printf '%s\n' "${VPS_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Request VPS deployment
+        shell: bash
+        env:
+          SERVICE: ${{ inputs.service }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/actionboard_vps_deploy_key \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}" \
+            "deploy-service ${SERVICE}"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## VPS deployment"
+            echo
+            echo "- Service: \`${{ inputs.service }}\`"
+            echo "- Source repository: \`${{ inputs.source_repository }}\`"
+            echo "- Source tag: \`${{ inputs.version_tag }}\`"
+            echo "- Source SHA: \`${{ inputs.source_sha }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
