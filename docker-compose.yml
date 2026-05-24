@@ -246,12 +246,29 @@ services:
     image: louislam/uptime-kuma:2
     container_name: uptime-kuma
     restart: unless-stopped
-    ports:
-      - "3002:3001"
     volumes:
       - uptime-kuma-data:/app/data
     networks:
       - backend
+    labels:
+      - traefik.enable=true
+
+      # Public HTTP route for Uptime Kuma status page / UI
+      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_DOMAIN:-status.actionboard.fr}`)
+      - traefik.http.routers.uptime-kuma.entrypoints=web
+      - traefik.http.routers.uptime-kuma.priority=110
+      - traefik.http.routers.uptime-kuma.service=uptime-kuma
+
+      # Public HTTPS route for Uptime Kuma status page / UI
+      - traefik.http.routers.uptime-kuma-secure.rule=Host(`${UPTIME_KUMA_DOMAIN:-status.actionboard.fr}`)
+      - traefik.http.routers.uptime-kuma-secure.entrypoints=websecure
+      - traefik.http.routers.uptime-kuma-secure.priority=110
+      - traefik.http.routers.uptime-kuma-secure.tls=true
+      - traefik.http.routers.uptime-kuma-secure.tls.certresolver=letsencrypt
+      - traefik.http.routers.uptime-kuma-secure.service=uptime-kuma
+
+      # Uptime Kuma internal port
+      - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
 
 networks:
   backend:
