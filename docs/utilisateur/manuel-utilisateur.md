@@ -1,128 +1,253 @@
 # Manuel utilisateur
 
 ## Objectif du document
-Aider les utilisateurs d’Analyse Basket à prendre en main l’application pour analyser une vidéo, structurer les observations et sauvegarder leur travail.
+Aider un utilisateur final à utiliser Action Board / Analyse Basket pour réaliser une analyse vidéo, organiser ses observations, sauvegarder ses ressources et les réutiliser.
 
 ## Public concerné
-- Coach
-- Analyste vidéo
-- Assistant coach
-- Étudiant STAPS
-- Formateur
-- Joueur consultant une analyse (à terme)
-- Administrateur applicatif (selon besoin)
+- Coach.
+- Analyste vidéo.
+- Assistant coach.
+- Étudiant ou formateur.
+- Administrateur applicatif, uniquement pour les fonctions de gestion prévues côté backend.
 
-## Présentation rapide d’Analyse Basket
-Analyse Basket est une application web d’analyse vidéo sportive low-cost. Elle permet de structurer l’analyse d’une vidéo avec des timelines, des panels personnalisés, des événements, des labels et des statistiques, sans imposer une méthode unique.
+Les parcours club, équipes, joueurs, tournois et matchs sont visibles dans la navigation applicative mais affichent actuellement un écran d'indisponibilité. Ils ne doivent pas être considérés comme des fonctionnalités prêtes.
+
+## Présentation rapide
+Action Board est une application web d'analyse vidéo sportive. Elle s'appuie sur trois éléments principaux :
+
+| Élément | Rôle |
+|---|---|
+| Vidéo | Support local chargé dans le navigateur pour lire, mettre en pause, ralentir et naviguer dans l'action |
+| Timeline | Fil chronologique qui conserve les occurrences créées pendant l'analyse |
+| Panel | Grille personnalisée de boutons d'analyse : événements, labels et statistiques |
+
+Les vidéos ne sont pas stockées sur le serveur dans le fonctionnement actuel observé. L'utilisateur charge un fichier vidéo depuis son poste et les données sauvegardées concernent les timelines, panels et métadonnées d'analyse.
 
 ## Pré-requis
-- Disposer d’un compte utilisateur.
-- Utiliser un navigateur récent.
-- Disposer d’une vidéo à analyser (ou d’un support vidéo compatible).
-- Avoir accès à l’application.
-- Être connecté pour les fonctionnalités protégées.
+1. Disposer d'un navigateur récent.
+2. Disposer d'un compte utilisateur.
+3. Avoir accès à l'application.
+4. Préparer une vidéo compatible avec le navigateur.
+5. Prévoir une méthode d'analyse : événements à observer, labels utiles, statistiques à suivre.
+
+## Arriver sur l'application
+1. Ouvrir l'URL de l'application.
+2. Consulter la page d'accueil ou les pages d'information si besoin.
+3. Utiliser le bouton de connexion ou d'inscription.
+4. Après connexion, accéder à l'espace d'accueil puis à la page d'analyse.
+
+Les routes publiques incluent notamment l'accueil, les fonctionnalités, les tarifs, la FAQ, le contact, les CGU et la confidentialité.
+
+## Créer un compte
+1. Ouvrir la fenêtre d'inscription.
+2. Saisir une adresse email, un mot de passe et, si demandé, un pseudo.
+3. Valider l'inscription.
+4. L'application connecte l'utilisateur après création du compte si l'inscription réussit.
+
+Bonnes pratiques :
+- choisir un mot de passe unique ;
+- éviter de saisir des données sensibles inutiles dans le pseudo ;
+- conserver l'accès à l'adresse email utilisée.
 
 ## Se connecter
-1. Ouvrir l’application.
-2. Saisir ses identifiants.
-3. Vérifier que la session est active.
-4. En cas d’échec, vérifier email/mot de passe puis contacter le support si nécessaire.
+1. Ouvrir la fenêtre de connexion.
+2. Saisir l'email et le mot de passe.
+3. Valider.
+4. Vérifier l'arrivée sur l'espace connecté.
 
-## Découvrir l’interface
-- Zone de navigation générale.
-- Zone d’analyse vidéo.
-- Zones de gestion timeline/panel selon les écrans.
-- Accès aux ressources sauvegardées.
+La session utilise un access token en mémoire et un cookie de refresh HttpOnly côté navigateur. Si la session expire, l'application tente un refresh ; en cas d'échec, il faut se reconnecter.
 
-## Charger ou utiliser une vidéo
-- Ouvrir la page d’analyse.
-- Charger ou utiliser un support vidéo compatible.
-- Démarrer la lecture et naviguer dans la vidéo.
-
-> Le stockage vidéo serveur n’est pas activé par défaut afin de limiter coûts, contraintes techniques et risques de confidentialité.
-
-## Créer une timeline
-Une timeline représente la structure d’analyse d’une vidéo. Elle permet de repérer les moments importants et de qualifier ces moments avec des informations utiles.
-
-Étapes générales :
-1. Créer une nouvelle timeline.
-2. Nommer la timeline.
-3. Ajouter les éléments d’analyse au fil de la vidéo.
-4. Sauvegarder.
-
-## Créer un panel
-Un panel est un ensemble personnalisable d’outils d’analyse (événements, labels, statistiques). Il permet à chaque coach, club ou discipline d’appliquer sa propre méthode.
-
-Étapes générales :
-1. Créer un panel.
-2. Ajouter les éléments utiles (événements/labels/stats).
-3. Personnaliser selon la méthode de travail.
-4. Sauvegarder.
-
-## Ajouter des événements
-Un événement correspond à une action ou un moment important observé dans la vidéo.
-
-## Ajouter des labels
-Un label ajoute du contexte à un événement. Il permet de distinguer deux événements similaires selon leur situation.
-
-## Ajouter des statistiques
-Les statistiques permettent de synthétiser l’analyse, repérer des tendances et retrouver plus rapidement les moments clés.
-
-## Utiliser les raccourcis clavier
-Raccourcis principaux :
-- `Espace` : lecture / pause
-- `Flèche gauche` : retour vidéo
-- `Flèche droite` : avance vidéo
-- `Virgule` ou `point` selon configuration : navigation image par image (si disponible)
-- Autres raccourcis personnalisés : À compléter
-
-## Sauvegarder son travail
-- Sauvegarder la timeline.
-- Sauvegarder le panel.
-- Vérifier que la sauvegarde est confirmée.
-- Revenir plus tard pour reprendre le travail.
-
-## Retrouver une analyse ou un panel
+## Ouvrir l'espace d'analyse
 1. Se connecter.
-2. Ouvrir la zone des ressources sauvegardées.
-3. Sélectionner la timeline ou le panel.
-4. Reprendre l’analyse.
+2. Aller sur la page `/analyse`.
+3. Vérifier que la page d'analyse affiche les zones principales : vidéo, timeline et panel.
+4. Si l'accès est refusé, vérifier la session et les droits nécessaires.
 
-## Exporter, copier ou publier
-Selon la disponibilité des fonctionnalités :
-- certaines ressources peuvent être exportées ou copiées ;
-- certains panels peuvent être publiés selon les règles métier ;
-- une ressource privée ne doit pas être visible ou modifiable sans autorisation.
+## Charger une vidéo
+1. Dans la zone vidéo, choisir l'action de chargement ou de remplacement de vidéo.
+2. Sélectionner un fichier vidéo local.
+3. Attendre le chargement des métadonnées.
+4. Lancer la lecture pour vérifier que le fichier est lisible.
 
-## Comprendre l’anonymisation
-- Une analyse peut contenir des noms ou données sensibles.
-- L’anonymisation permet de limiter l’exposition de ces données avant partage/publication.
-- L’utilisateur reste responsable du contenu saisi.
-- Vérifier le rendu anonymisé avant de partager.
+Points importants :
+- la vidéo reste côté navigateur ;
+- changer de vidéo peut réinitialiser l'état vidéo courant ;
+- si la lecture échoue, essayer un format compatible avec le navigateur.
 
-## Consulter l’état de l’application
-La page de statut Uptime Kuma permet de consulter la disponibilité des services principaux en cas de doute ou d’indisponibilité.
+## Utiliser le lecteur vidéo
+Le lecteur permet de :
+- lire et mettre en pause ;
+- se déplacer dans la vidéo ;
+- ajuster la vitesse entre les limites prévues par l'interface ;
+- avancer ou reculer plus finement selon les contrôles disponibles ;
+- retirer la vidéo chargée après confirmation.
 
-## Bonnes pratiques utilisateur
-- Nommer clairement ses timelines et panels.
+Raccourcis courants indiqués par l'application :
+
+| Raccourci | Action |
+|---|---|
+| `Espace` | Lecture / pause |
+| `Flèche gauche` | Retour vidéo |
+| `Flèche droite` | Avance vidéo |
+| `,` | Recul image par image si disponible |
+| `.` | Avance image par image si disponible |
+
+## Comprendre la timeline
+La timeline représente les moments importants de la vidéo. Elle est alimentée par les événements et labels créés à partir du panel.
+
+Utilisation recommandée :
+1. Charger la vidéo.
+2. Préparer ou charger un panel.
+3. Lancer la lecture.
+4. Déclencher les événements au moment voulu.
+5. Ajouter des labels lorsque l'action doit être qualifiée.
+6. Relire les occurrences pour vérifier leur timing.
+7. Sauvegarder la timeline.
+
+Une timeline sauvegardée reste privée dans le comportement actuel documenté côté front : elle est visible par son propriétaire.
+
+## Créer et utiliser un panel
+Un panel regroupe les boutons qui accélèrent l'analyse.
+
+Types de boutons :
+
+| Type | Usage |
+|---|---|
+| Événement | Créer une occurrence dans la timeline |
+| Label | Qualifier ou enrichir une occurrence |
+| Statistique | Suivre un indicateur pendant l'analyse |
+
+Créer un panel :
+1. Ouvrir les actions du panel.
+2. Créer un nouveau panel.
+3. Ajouter les événements nécessaires.
+4. Ajouter les labels utiles.
+5. Ajouter les statistiques si elles sont pertinentes.
+6. Nommer clairement les boutons.
+7. Configurer les raccourcis ou propriétés disponibles.
+8. Sauvegarder le panel.
+
+## Organiser le layout
+L'interface contient des mécanismes de drag and resize observés dans le code front. Quand le mode d'édition du layout est disponible :
+
+1. Activer le mode d'édition.
+2. Déplacer les blocs utiles.
+3. Redimensionner les zones de travail.
+4. Vérifier que la vidéo, la timeline et le panel restent lisibles.
+5. Quitter le mode d'édition.
+
+Bonnes pratiques :
+- garder la vidéo suffisamment grande pour lire les actions ;
+- placer le panel à un endroit accessible sans gêner la timeline ;
+- éviter des zones trop petites qui ralentissent l'analyse.
+
+## Sauvegarder une timeline
+1. Vérifier que la timeline porte un nom compréhensible.
+2. Ouvrir l'action de sauvegarde.
+3. Ajouter une description si l'interface le propose.
+4. Valider.
+5. Attendre la confirmation.
+6. Recharger la liste distante si nécessaire pour vérifier que la timeline est disponible.
+
+En cas d'échec, vérifier la connexion, la session et l'état du service.
+
+## Sauvegarder un panel
+1. Vérifier le nom du panel.
+2. Vérifier les boutons événements, labels et statistiques.
+3. Choisir la visibilité si proposée.
+4. Sauvegarder.
+5. Attendre la confirmation.
+
+Visibilités métier :
+
+| Visibilité | Signification actuelle |
+|---|---|
+| Privé | Visible uniquement par son propriétaire |
+| Public | Réutilisable par des utilisateurs connectés |
+| Club | Prévu dans le modèle technique, à confirmer côté usage produit |
+
+## Retrouver une ressource sauvegardée
+1. Se connecter.
+2. Ouvrir l'espace d'analyse.
+3. Utiliser l'action de recherche ou de chargement distant.
+4. Sélectionner une timeline ou un panel.
+5. Confirmer le remplacement si l'application prévient que la ressource courante sera écrasée.
+
+## Importer une timeline ou un panel
+1. Préparer un fichier JSON exporté depuis Action Board.
+2. Ouvrir le menu import/export.
+3. Choisir l'import panel ou timeline.
+4. Sélectionner le fichier.
+5. L'application valide le format auprès du service `analysis-store`.
+6. Si la validation réussit, charger la ressource.
+
+Ne pas importer de fichier dont l'origine est inconnue.
+
+## Exporter une timeline ou un panel
+1. Ouvrir le menu import/export.
+2. Choisir l'export souhaité.
+3. Le navigateur télécharge un fichier JSON.
+4. Conserver ce fichier dans un emplacement maîtrisé.
+
+L'export est local côté navigateur. Il sert à archiver, transférer ou réimporter une structure d'analyse.
+
+## Copier ou réutiliser un panel public
+Quand un panel public est visible :
+1. Ouvrir la recherche de panels.
+2. Sélectionner le panel.
+3. Le charger pour l'utiliser directement ou le copier si l'action est proposée.
+4. Adapter le panel à sa méthode de travail.
+5. Sauvegarder sa propre version si nécessaire.
+
+## Anonymisation et données sensibles
+Le modèle applicatif contient un indicateur de contenu anonymisé et certains boutons peuvent être marqués comme anonymisés. Cette fonctionnalité doit être utilisée avec prudence :
+
+1. Éviter de saisir des noms complets si ce n'est pas nécessaire.
+2. Utiliser des libellés génériques quand l'analyse doit être partagée.
+3. Vérifier le panel et la timeline avant export ou publication.
+4. Ne pas considérer l'anonymisation comme une garantie juridique complète sans validation humaine.
+
+Lors de la suppression d'un compte, les ressources privées sont concernées par le workflow de suppression. Les panels publics peuvent être conservés sous forme anonymisée selon la logique applicative.
+
+## Consulter l'état de l'application
+Une page Uptime Kuma peut être exposée sur le domaine de statut configuré. Elle permet de voir si les services principaux sont disponibles.
+
+À consulter si :
+- la connexion échoue alors que les identifiants semblent corrects ;
+- les sauvegardes échouent ;
+- l'application semble lente ou indisponible.
+
+## Erreurs fréquentes
+| Situation | Cause probable | Action recommandée |
+|---|---|---|
+| Impossible de se connecter | Identifiants invalides ou session expirée | Réessayer, puis demander une réinitialisation si disponible |
+| Retour à l'accueil pendant l'analyse | Access token expiré et refresh impossible | Se reconnecter |
+| La vidéo ne se charge pas | Format non supporté ou fichier inaccessible | Tester un autre format ou navigateur |
+| Sauvegarde impossible | Session expirée ou API indisponible | Se reconnecter, consulter le statut, réessayer |
+| Import refusé | Fichier JSON invalide ou mauvais type | Réexporter depuis Action Board ou vérifier le fichier |
+| Panel public introuvable | Ressource privée ou droits insuffisants | Vérifier la visibilité et le compte connecté |
+| Données club non visibles | Domaine club non finalisé | Considérer la fonctionnalité comme à confirmer |
+
+## Bonnes pratiques
+- Préparer le panel avant de démarrer l'analyse.
+- Nommer clairement les timelines et panels.
 - Sauvegarder régulièrement.
-- Vérifier l’anonymisation avant partage.
-- Éviter les données sensibles inutiles.
-- Garder ses accès confidentiels.
-- Vérifier l’état des services si un comportement semble anormal.
+- Exporter une copie JSON avant une grosse modification.
+- Garder les panels publics génériques et anonymisés.
+- Vérifier les données sensibles avant partage.
+- Ne pas compter sur le stockage vidéo serveur : conserver la vidéo source de son côté.
 
 ## Limites connues
-- L’application repose sur une activité fortement visuelle.
-- Certaines fonctionnalités avancées (extraction vidéo, association club/équipe/joueurs) sont prévues à terme.
-- Le stockage vidéo serveur n’est pas activé par défaut.
-- Les fonctionnalités disponibles peuvent évoluer selon la version.
+- Les vidéos sont chargées localement dans le navigateur.
+- Les timelines publiques ne sont pas disponibles dans le comportement utilisateur actuel.
+- Les fonctionnalités club, équipes, joueurs, tournois et matchs sont encore indisponibles côté interface.
+- Le modèle club existe techniquement mais doit être confirmé fonctionnellement.
+- Les écrans administrateur backend existent côté service auth, mais l'accès public n'est pas routé dans l'infra actuelle.
 
-## Aide et support
-- Vérifier d’abord la documentation utilisateur.
-- Vérifier la page de statut.
-- Remonter un problème via le canal support projet : À compléter.
-
-## Informations à compléter
-- Localisation exacte des menus selon version front.
-- Liste complète des raccourcis personnalisés par panel.
-- Canal support utilisateur officiel.
+## Support
+Avant de signaler un problème :
+1. Vérifier la connexion.
+2. Recharger l'application.
+3. Consulter la page de statut si elle est disponible.
+4. Noter l'action effectuée, l'heure approximative et le message d'erreur.
+5. Transmettre ces informations au canal support du projet.

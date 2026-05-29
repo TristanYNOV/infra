@@ -1,145 +1,199 @@
 # Parcours utilisateur
 
 ## Objectif du document
-Décrire les parcours clés d’usage d’Analyse Basket pour faciliter la prise en main et la validation fonctionnelle.
+Décrire les parcours clés d'usage d'Action Board / Analyse Basket et fournir un guide rapide pour réaliser une première analyse vidéo.
 
-## Principes
-- Parcours orientés usage réel.
-- Étapes simples et progressives.
-- Distinction claire entre fonctionnalités disponibles et évolutions prévues.
+## Guide rapide - Comment faire une analyse ?
+
+### Prérequis
+- Avoir un compte utilisateur.
+- Être connecté à l'application.
+- Disposer d'une vidéo locale lisible par le navigateur.
+- Avoir une idée des événements, labels ou statistiques à observer.
+
+### Étapes courtes
+1. Se connecter.
+2. Ouvrir l'espace d'analyse avec la route `/analyse`.
+3. Charger une vidéo depuis son ordinateur.
+4. Créer un nouveau panel ou charger un panel existant.
+5. Ajouter les boutons utiles : événements, labels, statistiques.
+6. Créer ou ouvrir une timeline.
+7. Lancer la vidéo.
+8. Déclencher les événements au bon moment.
+9. Ajouter les labels nécessaires pour qualifier les actions.
+10. Vérifier la timeline et ajuster si besoin.
+11. Sauvegarder la timeline.
+12. Sauvegarder le panel si sa configuration doit être réutilisée.
+13. Exporter en JSON si une copie locale est nécessaire.
+
+### Checklist avant de terminer
+- La timeline porte un nom clair.
+- Le panel porte un nom clair.
+- Les occurrences principales sont présentes.
+- Les labels sont cohérents.
+- Les statistiques utiles ont été vérifiées.
+- La timeline est sauvegardée en ligne.
+- Le panel est sauvegardé ou exporté.
+- Les données sensibles ont été retirées ou anonymisées si la ressource doit être partagée.
+- La vidéo source reste conservée côté utilisateur.
+
+### Mini FAQ
+| Question | Réponse |
+|---|---|
+| La vidéo est-elle envoyée au serveur ? | Non dans le fonctionnement actuel observé : elle est chargée localement dans le navigateur. |
+| Puis-je rendre une timeline publique ? | Non côté usage actuel documenté : les timelines sont privées. |
+| Puis-je partager un panel ? | Oui si le panel est enregistré avec une visibilité publique. |
+| Puis-je importer un panel ou une timeline ? | Oui via un fichier JSON validé par l'application. |
+| Que faire si ma session expire ? | Se reconnecter, puis recharger ou sauvegarder de nouveau si nécessaire. |
+
+### Erreurs fréquentes
+| Problème | Action rapide |
+|---|---|
+| La page `/analyse` refuse l'accès | Vérifier la connexion et les droits de licence. |
+| Le fichier vidéo ne se lit pas | Essayer un format compatible navigateur. |
+| La sauvegarde échoue | Vérifier la session, consulter la page de statut, puis réessayer. |
+| L'import est refusé | Vérifier qu'il s'agit d'un JSON exporté par Action Board. |
+| Un panel public est introuvable | Vérifier qu'il est réellement public et que l'utilisateur est connecté. |
+
+## Principes des parcours
+- Les parcours décrivent l'usage réel observable dans le code.
+- Les fonctionnalités non prêtes sont explicitement marquées comme prévues ou à confirmer.
+- Les étapes restent orientées utilisateur, sans détail technique inutile.
 
 ## Rôles utilisateurs
-- Coach
-- Analyste vidéo
-- Assistant coach
-- Étudiant STAPS
-- Formateur
-- Administrateur applicatif (selon fonctionnalités)
-- Joueur consultant (à terme)
+- Coach.
+- Analyste vidéo.
+- Assistant coach.
+- Étudiant ou formateur.
+- Administrateur applicatif pour les opérations de gestion prévues côté backend.
+- Joueur consultant : prévu à terme, non confirmé dans l'interface actuelle.
 
-## Parcours 1 — Première connexion
-- **Objectif du parcours** : accéder à son espace et démarrer l’application.
-- **Acteur principal** : utilisateur connecté.
-- **Pré-requis** : compte actif.
-- **Étapes** : accéder à l’app, saisir identifiants, valider connexion, ouvrir espace d’analyse/ressources.
-- **Résultat attendu** : session active et accès aux fonctionnalités autorisées.
-- **Points de vigilance** : identifiants corrects, session valide.
-- **Statut** : En place.
+## Parcours 1 - Première connexion
+| Élément | Description |
+|---|---|
+| Objectif | Accéder à l'espace connecté |
+| Acteur | Utilisateur |
+| Pré-requis | Compte actif |
+| Étapes | Ouvrir l'application, ouvrir la connexion, saisir email/mot de passe, valider |
+| Résultat attendu | Session active, arrivée sur l'espace connecté |
+| Statut | En place |
 
-## Parcours 2 — Réaliser une première analyse vidéo
-- **Objectif du parcours** : démarrer une analyse sur un support vidéo.
-- **Acteur principal** : coach / analyste vidéo.
-- **Pré-requis** : accès à la page d’analyse, support vidéo compatible.
-- **Étapes** : ouvrir page analyse, charger/utiliser vidéo, lancer lecture, naviguer dans la timeline temporelle.
-- **Résultat attendu** : premiers moments importants identifiés.
-- **Points de vigilance** : qualité du support vidéo, fluidité de navigation.
-- **Statut** : En place.
+## Parcours 2 - Réaliser une première analyse vidéo
+| Élément | Description |
+|---|---|
+| Objectif | Démarrer une analyse à partir d'une vidéo locale |
+| Acteur | Coach ou analyste |
+| Pré-requis | Session active, vidéo disponible |
+| Étapes | Ouvrir `/analyse`, charger une vidéo, lancer la lecture, utiliser le panel et la timeline |
+| Résultat attendu | Premières occurrences créées dans la timeline |
+| Statut | En place |
 
-## Parcours 3 — Créer et sauvegarder une timeline
-- **Objectif du parcours** : structurer une analyse dans le temps.
-- **Acteur principal** : coach / analyste vidéo.
-- **Pré-requis** : session active.
-- **Étapes** : créer timeline, ajouter éléments, sauvegarder, recharger la timeline.
-- **Résultat attendu** : timeline persistée et récupérable.
-- **Points de vigilance** : vérifier confirmation de sauvegarde.
-- **Statut** : En place.
+## Parcours 3 - Créer et sauvegarder une timeline
+| Élément | Description |
+|---|---|
+| Objectif | Structurer l'observation dans le temps |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Session active |
+| Étapes | Nommer la timeline, créer des occurrences, vérifier le timing, sauvegarder |
+| Résultat attendu | Timeline persistée et récupérable |
+| Statut | En place |
 
-## Parcours 4 — Créer et sauvegarder un panel
-- **Objectif du parcours** : personnaliser les outils d’analyse.
-- **Acteur principal** : coach / analyste vidéo.
-- **Pré-requis** : session active.
-- **Étapes** : créer panel, ajouter boutons (events/labels/stats), personnaliser, sauvegarder.
-- **Résultat attendu** : panel disponible pour réutilisation.
-- **Points de vigilance** : cohérence des éléments du panel.
-- **Statut** : En place.
+## Parcours 4 - Créer et sauvegarder un panel
+| Élément | Description |
+|---|---|
+| Objectif | Préparer une grille d'analyse réutilisable |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Session active |
+| Étapes | Créer panel, ajouter événements/labels/stats, configurer visibilité, sauvegarder |
+| Résultat attendu | Panel disponible pour une future analyse |
+| Statut | En place |
 
-## Parcours 5 — Utiliser des événements et labels
-- **Objectif du parcours** : enrichir l’analyse des actions observées.
-- **Acteur principal** : coach / analyste vidéo.
-- **Pré-requis** : panel/timeline disponibles.
-- **Étapes** : déclencher événement, ajouter/activer label, consulter résultat dans l’analyse.
-- **Résultat attendu** : contexte d’action enrichi.
-- **Points de vigilance** : cohérence des labels avec les événements.
-- **Statut** : En place.
+## Parcours 5 - Importer une ressource
+| Élément | Description |
+|---|---|
+| Objectif | Réutiliser une timeline ou un panel exporté |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Fichier JSON compatible |
+| Étapes | Ouvrir import/export, choisir le fichier, laisser l'application valider, charger la ressource |
+| Résultat attendu | Ressource importée dans l'espace courant |
+| Statut | En place |
 
-## Parcours 6 — Utiliser les statistiques
-- **Objectif du parcours** : synthétiser et interpréter les tendances.
-- **Acteur principal** : coach / analyste vidéo.
-- **Pré-requis** : données d’analyse disponibles.
-- **Étapes** : consulter/configurer statistiques, interpréter les tendances, repérer moments clés.
-- **Résultat attendu** : meilleure lecture du match.
-- **Points de vigilance** : qualité des données d’entrée.
-- **Statut** : En place (selon fonctionnalités disponibles).
+## Parcours 6 - Exporter une ressource
+| Élément | Description |
+|---|---|
+| Objectif | Conserver ou transmettre une copie JSON |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Timeline ou panel prêt |
+| Étapes | Ouvrir import/export, lancer l'export, récupérer le fichier téléchargé |
+| Résultat attendu | Fichier JSON local |
+| Statut | En place |
 
-## Parcours 7 — Retrouver une analyse sauvegardée
-- **Objectif du parcours** : reprendre un travail existant.
-- **Acteur principal** : utilisateur connecté.
-- **Pré-requis** : ressources sauvegardées.
-- **Étapes** : se connecter, ouvrir ressources, sélectionner timeline/panel, reprendre analyse.
-- **Résultat attendu** : continuité de travail.
-- **Points de vigilance** : droits d’accès, version de ressource.
-- **Statut** : En place.
+## Parcours 7 - Retrouver une analyse sauvegardée
+| Élément | Description |
+|---|---|
+| Objectif | Reprendre un travail existant |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Ressource sauvegardée |
+| Étapes | Ouvrir la recherche distante, choisir une timeline ou un panel, confirmer le remplacement si nécessaire |
+| Résultat attendu | Travail rechargé dans l'interface |
+| Statut | En place |
 
-## Parcours 8 — Publier ou partager un panel
-- **Objectif du parcours** : rendre un panel accessible selon règles métier.
-- **Acteur principal** : utilisateur autorisé.
-- **Pré-requis** : panel existant, fonctionnalité disponible.
-- **Étapes** : sélectionner panel, choisir publication/partage, vérifier données visibles, confirmer.
-- **Résultat attendu** : panel partagé selon règles.
-- **Points de vigilance** : distinction privé/public, données sensibles.
-- **Statut** : Selon disponibilité de la fonctionnalité.
+## Parcours 8 - Publier ou partager un panel
+| Élément | Description |
+|---|---|
+| Objectif | Rendre une grille d'analyse réutilisable |
+| Acteur | Utilisateur connecté |
+| Pré-requis | Panel existant |
+| Étapes | Choisir une visibilité publique si proposée, sauvegarder, vérifier les données visibles |
+| Résultat attendu | Panel public accessible aux utilisateurs autorisés |
+| Statut | En place côté modèle et API ; à valider selon l'écran exact |
 
-## Parcours 9 — Anonymiser un contenu sensible
-- **Objectif du parcours** : protéger l’identité numérique avant diffusion.
-- **Acteur principal** : utilisateur auteur de l’analyse.
-- **Pré-requis** : contenu à anonymiser.
-- **Étapes** : identifier données sensibles, appliquer/vérifier anonymisation, contrôler résultat, partager si conforme.
-- **Résultat attendu** : contenu diffusé avec exposition réduite des données sensibles.
-- **Points de vigilance** : vérifier le rendu final.
-- **Statut** : En place (à vérifier selon écran exact).
+## Parcours 9 - Protéger les données sensibles
+| Élément | Description |
+|---|---|
+| Objectif | Limiter l'exposition des données personnelles |
+| Acteur | Auteur de la ressource |
+| Pré-requis | Ressource contenant des noms ou informations sensibles |
+| Étapes | Renommer les éléments sensibles, utiliser les options d'anonymisation disponibles, vérifier avant export/publication |
+| Résultat attendu | Ressource plus sûre à conserver ou partager |
+| Statut | Partiel, à valider selon les écrans |
 
-## Parcours 10 — Consulter l’état de l’application
-- **Objectif du parcours** : comprendre rapidement si un service est indisponible.
-- **Acteur principal** : tout utilisateur.
-- **Pré-requis** : accès à la page de statut.
-- **Étapes** : ouvrir status page, vérifier état des services, identifier éventuelle indisponibilité.
-- **Résultat attendu** : diagnostic simple côté utilisateur.
-- **Points de vigilance** : interprétation des statuts.
-- **Statut** : En place.
+## Parcours 10 - Consulter l'état de l'application
+| Élément | Description |
+|---|---|
+| Objectif | Comprendre si une indisponibilité vient d'un service |
+| Acteur | Tout utilisateur |
+| Pré-requis | Accès à la page de statut |
+| Étapes | Ouvrir le domaine de statut Uptime Kuma, vérifier les services principaux |
+| Résultat attendu | Diagnostic simple de disponibilité |
+| Statut | En place côté infra |
 
 ## Parcours administrateur
-- **Objectif du parcours** : gérer des opérations d’administration (si disponible).
-- **Acteur principal** : administrateur applicatif.
-- **Pré-requis** : droits admin.
-- **Étapes** : consulter actions admin, exécuter action autorisée, contrôler résultat.
-- **Résultat attendu** : action admin conforme aux droits.
-- **Points de vigilance** : sécurité et traçabilité.
-- **Statut** : À compléter.
+Le backend `auth-service` contient des routes d'administration pour lister, modifier et demander la suppression d'utilisateurs. Dans l'infra actuelle, les labels Traefik ne routent pas publiquement `/admin/*`. Ce parcours est donc à confirmer avant documentation utilisateur opérationnelle.
 
-## Parcours futurs
-- Extraction de séquences vidéo.
-- Association d’une analyse à un club.
-- Association d’une analyse à une équipe.
-- Association d’une analyse à des joueurs.
-- Consultation joueur.
-- Statistiques avancées.
+## Parcours prévus ou indisponibles
+| Parcours | Statut actuel |
+|---|---|
+| Club | Route front présente, écran indisponible |
+| Équipes | Route front présente, écran indisponible |
+| Joueurs | Route front présente, écran indisponible |
+| Tournois | Route front présente, écran indisponible |
+| Matchs | Route front présente, écran indisponible |
+| Consultation joueur | Prévue à terme |
+| Données club dans les droits analysis-store | Modèle technique présent, claims non alimentés actuellement |
 
 ## Tableau de synthèse
-| ID | Parcours | Acteur | Priorité | Fonctionnalités concernées | Statut | Commentaire |
-|---|---|---|---|---|---|---|
-| P-01 | Première connexion | Utilisateur connecté | Haute | Authentification, session | En place | Point d’entrée |
-| P-02 | Première analyse vidéo | Coach/Analyste | Haute | Page analyse, vidéo | En place | Base usage produit |
-| P-03 | Timeline | Coach/Analyste | Haute | Création/sauvegarde timeline | En place | Critère MVP |
-| P-04 | Panel | Coach/Analyste | Haute | Création/sauvegarde panel | En place | Personnalisation |
-| P-05 | Events + labels | Coach/Analyste | Haute | Événements, labels | En place | Enrichissement contexte |
-| P-06 | Statistiques | Coach/Analyste | Moyenne | Stats | En place (selon disponibilité) | À confirmer détail |
-| P-07 | Reprise analyse | Utilisateur connecté | Haute | Ressources sauvegardées | En place | Continuité |
-| P-08 | Partage/publication panel | Utilisateur autorisé | Moyenne | Publication/partage | Selon disponibilité | Règles métier |
-| P-09 | Anonymisation | Utilisateur auteur | Haute | Anonymisation | En place (à confirmer) | Vérification manuelle |
-| P-10 | État application | Tout utilisateur | Moyenne | Status page | En place | Diagnostic disponibilité |
-| P-11 | Parcours admin | Administrateur | Moyenne | Fonctions admin | À compléter | Détails non confirmés |
-| P-12 | Parcours futurs | Divers | Basse/Future | FFmpeg, club/équipe/joueurs | Prévu à terme | Hors MVP |
-
-## Informations à compléter
-- Détail exact des écrans administrateur disponibles.
-- Niveau de disponibilité exact de certaines fonctions de publication/export selon version.
+| ID | Parcours | Priorité | Statut | Commentaire |
+|---|---|---|---|---|
+| P-01 | Première connexion | Haute | En place | Accès aux fonctions protégées |
+| P-02 | Première analyse vidéo | Haute | En place | Vidéo locale + timeline + panel |
+| P-03 | Sauvegarde timeline | Haute | En place | Timeline privée |
+| P-04 | Sauvegarde panel | Haute | En place | Visibilité privée/publique/club côté modèle |
+| P-05 | Import | Moyenne | En place | Validation côté analysis-store |
+| P-06 | Export | Moyenne | En place | Export JSON local |
+| P-07 | Reprise d'analyse | Haute | En place | Chargement distant |
+| P-08 | Panel public | Moyenne | En place à valider UX | Ne concerne pas les timelines publiques |
+| P-09 | Anonymisation | Moyenne | Partiel | Contrôle humain nécessaire |
+| P-10 | Page de statut | Moyenne | En place infra | Uptime Kuma |
+| P-11 | Admin | Moyenne | À confirmer | Backend présent, route publique non exposée |
+| P-12 | Club/équipe/joueurs/matchs | Basse | Prévu/indisponible | Routes front non fonctionnelles |
