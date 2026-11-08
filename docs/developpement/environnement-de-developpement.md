@@ -36,7 +36,7 @@ Décrire l’environnement technique de développement d’Analyse Basket et les
 | Front SSR (prod/conteneur) | 4000 |
 | auth-service | 3000 |
 | analysis-store-service | 3001 |
-| Uptime Kuma | 3002 |
+| Uptime Kuma | via Traefik sur `UPTIME_KUMA_DOMAIN` (port interne `3001`) |
 | Traefik dashboard | 8080 |
 
 ## Modes de lancement

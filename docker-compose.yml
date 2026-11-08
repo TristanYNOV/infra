@@ -53,6 +53,7 @@ services:
     image: ${FRONT_IMAGE}
     environment:
       PORT: "4000"
+      API_ALLOWED_PREFIXES: ${API_ALLOWED_PREFIXES:-/auth,/analysis/api,/api,/me,/users}
     networks:
       - backend
     labels:
